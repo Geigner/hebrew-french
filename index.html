@@ -1,426 +1,234 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>גשר שפות: עברית-צרפתית | היחידה לקידום נוער נוף הגליל</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
-    body { font-family: 'Assistant', sans-serif; }
-  </style>
+    <meta charset="UTF-8">
+    <title>גשר שפות: עברית ⇄ צרפתית</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        #chat-container {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            max-width: 75%;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .message.mine {
+            background-color: #d1e7dd;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        .message.other {
+            background-color: #f8d7da;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        .sender-name {
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            resize: none;
+            height: 45px;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0b5ed7;
+        }
+        #user-settings {
+            text-align: left;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        #user-settings span {
+            color: #0d6efd;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.8em;
+            color: #777;
+            margin-top: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col justify-between">
+<body>
 
-  <!-- Header -->
-  <header class="bg-indigo-700 text-white shadow-md p-3 sm:p-4 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-      <h1 class="text-base sm:text-xl font-bold">גשר שפות: עברית ⇄ צרפתית</h1>
-    </div>
+    <h2>גשר שפות: עברית ⇄ צרפתית</h2>
     
-    <!-- אזור הניהול -->
-    <div class="flex items-center gap-2">
-      <button id="admin-login-btn" onclick="openAdminPanel()" class="bg-indigo-800 hover:bg-indigo-900 text-sm p-2 rounded-lg transition border border-indigo-600 flex items-center justify-center" title="כניסת מנהל">
-        ⚙️
-      </button>
-
-      <div id="admin-controls" class="hidden flex items-center gap-1.5 bg-indigo-800 p-1.5 rounded-lg border border-indigo-500 shadow-lg flex-wrap">
-        <button onclick="copyRoomLink()" id="copy-btn" class="bg-indigo-700 hover:bg-indigo-600 text-xs px-2.5 py-1.5 rounded transition">
-          העתק קישור לחדר
-        </button>
-        <button onclick="createNewRoom()" class="bg-emerald-700 hover:bg-emerald-800 text-xs px-2.5 py-1.5 rounded transition" title="יצירת חדר שיחה חדש ונקי">
-          חדר חדש
-        </button>
-        <button onclick="openRoomsManager()" class="bg-amber-700 hover:bg-amber-800 text-xs px-2.5 py-1.5 rounded transition" title="ניהול חדרים פתוחים">
-          רשימת חדרים 🗂
-        </button>
-        <button onclick="clearChatAction()" class="bg-rose-700 hover:bg-rose-800 text-xs px-2.5 py-1.5 rounded transition">
-          איפוס חדר
-        </button>
-        <button onclick="lockAdminPanel()" class="text-xs px-2 py-1 text-indigo-200 hover:text-white font-bold" title="סגור מצב ניהול (ESC)">
-          ✕
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Chat Box -->
-  <main class="flex-1 max-w-4xl w-full mx-auto p-2 sm:p-4 flex flex-col gap-3 overflow-hidden">
-    <div id="chat-box" class="bg-white border border-slate-200 rounded-xl shadow-inner flex-1 p-3 sm:p-4 overflow-y-auto flex flex-col gap-3">
-      <div id="loading-msg" class="text-center text-slate-400 py-10">טוען היסטוריית שיחה...</div>
+    <div id="user-settings">
+        השם שלך בצ'אט: <strong id="display-username">מתבסס על מכשיר</strong> (<span onclick="changeUsername()">שנה שם</span>)
     </div>
 
-    <!-- Input Area -->
-    <div class="bg-white border border-slate-200 rounded-xl shadow p-3 flex flex-col gap-2">
-      <div class="flex gap-2">
-        <textarea id="message-input" rows="2" placeholder="הקלד בעברית או בצרפתית והתרגום יתבצע אוטומטית (לחץ Enter)..." class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" onkeydown="handleKeyPress(event)"></textarea>
-        <button onclick="sendMessage()" id="send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-lg font-medium transition shadow text-sm sm:text-base flex items-center justify-center">
-          שליחה
-        </button>
-      </div>
+    <div id="chat-container">
+        <!-- ההודעות יטענו לכאן בצורה חלקה ללא ריצוד -->
     </div>
-  </main>
 
-  <!-- Modal: Rooms Manager -->
-  <div id="rooms-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[80vh]">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-lg font-bold text-slate-800">ניהול חדרים פתוחים במערכת</h3>
-        <button onclick="closeRoomsManager()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-      </div>
-      <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2">
-        <div class="text-center text-slate-400 py-4">טוען רשימת חדרים...</div>
-      </div>
-      <div class="border-t pt-3 flex justify-end">
-        <button onclick="closeRoomsManager()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-lg text-sm font-medium transition">סגור</button>
-      </div>
+    <div id="input-container">
+        <textarea id="message-input" placeholder="הקלד הודעה או ברכה (Enter לשליחה)..." onkeydown="handleKeyPress(event)"></textarea>
+        <button onclick="sendMessage()">שליחה</button>
     </div>
-  </div>
 
-  <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-2.5 text-center text-xs text-slate-500 leading-relaxed">
-    היחידה לקידום נוער נוף הגליל | תוכנית היל"ה<br>
-    © תשפ"ז | גיא אייגנר – מנהל השכלה | פיתוח וניהול פדגוגי
-  </footer>
+    <footer>
+        היחידה לקידום נוער נוף הגליל | תוכנית היל"ה<br>
+        © תשפ"ז | גיא אייגנר – מנהל השכלה | פיתוח וניהול פדגוגי
+    </footer>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzkAazteBmoUi-yhSTG09UR92hrMwXb9KQM_nzDT0k5oluVliS16nM17eVnJzf8H-mp/exec";
-
-    let localHistory = [];
-    let isSending = false;
-    let isAdminAuthenticated = false;
-    let cachedAdminPassword = '';
-    let isInitialLoad = true;
-
-    function getClientId() {
-      let clientId = localStorage.getItem('bridge_client_id_fr');
-      if (!clientId) {
-        clientId = 'client_' + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem('bridge_client_id_fr', clientId);
-      }
-      return clientId;
-    }
-
-    const currentClientId = getClientId();
-
-    function getUserColorStyle(clientId) {
-      const themes = [
-        { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900' },
-        { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-900' },
-        { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900' },
-        { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-900' },
-        { bg: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-900' },
-        { bg: 'bg-teal-50', border: 'border-teal-300', text: 'text-teal-900' }
-      ];
-      if (!clientId) return themes[0];
-      let hash = 0;
-      for (let i = 0; i < clientId.length; i++) {
-        hash = clientId.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const index = Math.abs(hash) % themes.length;
-      return themes[index];
-    }
-
-    function getRoomId() {
-      const params = new URLSearchParams(window.location.search);
-      let roomId = params.get('room');
-      if (!roomId) {
-        roomId = 'room_' + Math.random().toString(36).substring(2, 9);
-        params.set('room', roomId);
-        const newUrl = window.location.pathname + '?' + params.toString();
-        window.history.replaceState({}, '', newUrl);
-      }
-      return roomId;
-    }
-
-    const currentRoomId = getRoomId();
-
-    async function callApi(action, payload = {}) {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action, roomId: currentRoomId, password: cachedAdminPassword, ...payload })
-      });
-      const textResponse = await response.text();
-      let resJson;
-      try {
-        resJson = JSON.parse(textResponse);
-      } catch (e) {
-        throw new Error("תשובת שרת לא תקינה");
-      }
-      
-      if (resJson.status === 'success') {
-        return resJson.data;
-      } else {
-        throw new Error(resJson.message || "שגיאת שרת");
-      }
-    }
-
-    async function fetchHistory(isBackground = false) {
-      // אם כרגע מתבצעת שליחה, אל תדרוס את ההיסטוריה המקומית כדי למנוע היעלמות זמנית של הודעות
-      if (isSending) return;
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'getHistory', roomId: currentRoomId, password: cachedAdminPassword })
-        });
-        
-        const textResponse = await response.text();
-        let resJson;
-        try {
-          resJson = JSON.parse(textResponse);
-        } catch (e) {
-          return; 
+    <script>
+        // מזהה ייחודי למכשיר וניהול שם משתמש
+        let clientId = localStorage.getItem('chat_client_id');
+        if (!clientId) {
+            clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_client_id', clientId);
         }
 
-        if (resJson.status === 'success') {
-          const serverHistory = resJson.data || [];
-          
-          // עדכן רק אם יש הבדל באורך או בתוכן כדי למנוע ריצודים
-          if (JSON.stringify(serverHistory) !== JSON.stringify(localHistory)) {
-            localHistory = serverHistory;
-            renderChat();
-          }
+        let username = localStorage.getItem('chat_username');
+        if (!username) {
+            username = 'משתמש ' + Math.floor(Math.random() * 1000);
+            localStorage.setItem('chat_username', username);
         }
-      } catch (err) {
-        if (!isBackground) {
-          console.error("שגיאת סנכרון", err);
+        document.getElementById('display-username').innerText = username;
+
+        function changeUsername() {
+            let newName = prompt("הכנס את שמך החדש לצ'אט:", username);
+            if (newName && newName.trim() !== "") {
+                username = newName.trim();
+                localStorage.setItem('chat_username', username);
+                document.getElementById('display-username').innerText = username;
+            }
         }
-      }
-    }
 
-    function renderChat() {
-      const chatBox = document.getElementById('chat-box');
-      if (!localHistory || localHistory.length === 0) {
-        chatBox.innerHTML = `<div class="text-center text-slate-400 py-10">השיחה בחדר זה ריקה. התחל לכתוב למטה!</div>`;
-        return;
-      }
+        // מעקב אחרי מזהי הודעות קיימות למניעת הבהובים ומחיקות מיותרות
+        let displayedMessageIds = new Set();
 
-      const isScrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 120;
+        function fetchMessages() {
+            google.script.run
+                .withSuccessHandler(updateChatUI)
+                .withFailureHandler(err => console.error("שגיאה בשליפת הודעות:", err))
+                .getMessages(); // פונקציית Google Apps Script ששולפת את הנתונים
+        }
 
-      let html = '';
-      localHistory.forEach(item => {
-        const isMe = item.clientId === currentClientId;
-        const theme = getUserColorStyle(item.clientId);
+        function updateChatUI(messages) {
+            if (!messages || !Array.isArray(messages)) return;
+            
+            const container = document.getElementById('chat-container');
+            let hasNewMessages = false;
+
+            messages.forEach(msg => {
+                // מזהה ייחודי לכל הודעה (לפי Timestamp + ClientId או ID מובנה)
+                const msgId = msg.id || (msg.timestamp + '_' + msg.senderId);
+
+                if (!displayedMessageIds.has(msgId)) {
+                    displayedMessageIds.add(msgId);
+                    hasNewMessages = true;
+
+                    const msgDiv = document.createElement('div');
+                    const isMine = (msg.senderId === clientId);
+                    
+                    msgDiv.className = 'message ' + (isMine ? 'mine' : 'other');
+                    msgDiv.setAttribute('data-id', msgId);
+
+                    const senderSpan = document.createElement('div');
+                    senderSpan.className = 'sender-name';
+                    senderSpan.innerText = msg.senderName || (isMine ? 'אני' : 'משתתף נוסף');
+
+                    const textDiv = document.createElement('div');
+                    textDiv.innerText = msg.text;
+
+                    msgDiv.appendChild(senderSpan);
+                    msgDiv.appendChild(textDiv);
+                    container.appendChild(msgDiv);
+                }
+            });
+
+            // גלילה למטה רק אם נוספו הודעות חדשות כדי לא לפגוע בחוויית הקריאה
+            if (hasNewMessages) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const messageData = {
+                text: text,
+                senderId: clientId,
+                senderName: username,
+                timestamp: new Date().getTime()
+            };
+
+            // ניקוי תיבת הטקסט מיד לחוויית משתמש חלקה
+            input.value = '';
+
+            google.script.run
+                .withSuccessHandler(() => {
+                    fetchMessages(); // רענון מהיר לאחר שליחה מוצלחת
+                })
+                .withFailureHandler(err => alert("שגיאה בשליחת ההודעה. נסה שוב."))
+                .saveMessage(messageData); // פונקציית Google Apps Script לשמירת ההודעה
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // רענון אוטומטי כל 2 שניות בצורה חלקה ללא פגיעה ב-DOM הקיים
+        setInterval(fetchMessages, 2000);
         
-        html += `
-          <div class="flex flex-col items-start gap-1 ${theme.bg} border ${theme.border} rounded-xl p-3 shadow-sm transition-all">
-            <div class="flex justify-between w-full text-xs font-bold">
-              <span class="${theme.text}">${isMe ? '👤 אני (מכשיר זה)' : '📱 משתתף נוסף'}</span>
-              <span class="text-[10px] text-slate-400 font-normal">${item.time || ''}</span>
-            </div>
-            <div class="text-sm sm:text-base text-slate-900 font-medium" dir="auto">${escapeHtml(item.original)}</div>
-            <div class="border-t border-slate-300/60 pt-1.5 w-full text-sm sm:text-base ${theme.text} font-semibold" dir="auto">
-              ${escapeHtml(item.translated)}
-            </div>
-          </div>
-        `;
-      });
-
-      chatBox.innerHTML = html;
-
-      if (isInitialLoad || isScrolledToBottom) {
-        chatBox.scrollTop = chatBox.scrollHeight;
-        isInitialLoad = false;
-      }
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById('message-input');
-      const text = input.value.trim();
-      if (!text || isSending) return;
-
-      isSending = true;
-      input.value = '';
-      document.getElementById('send-btn').disabled = true;
-
-      // הוספה מיידית לממשק (Optimistic UI Update)
-      const tempItem = {
-        original: text,
-        translated: "מעבד תרגום...",
-        time: "עכשיו",
-        clientId: currentClientId
-      };
-      
-      localHistory.push(tempItem);
-      renderChat();
-
-      const chatBox = document.getElementById('chat-box');
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      try {
-        const newHistory = await callApi('sendMessage', { text, clientId: currentClientId });
-        localHistory = newHistory || [];
-        renderChat();
-      } catch (err) {
-        alert("שגיאה בשליחת הודעה: " + err.message);
-        await fetchHistory();
-      } finally {
-        isSending = false;
-        document.getElementById('send-btn').disabled = false;
-        input.focus();
-      }
-    }
-
-    function openAdminPanel() {
-      if (isAdminAuthenticated) {
-        showAdminControls();
-        return;
-      }
-      const pwd = prompt("הכנס סיסמת מנהל:");
-      if (!pwd) return;
-      verifyAdminPassword(pwd);
-    }
-
-    async function verifyAdminPassword(pwd) {
-      try {
-        cachedAdminPassword = pwd;
-        await callApi('getHistory');
-        isAdminAuthenticated = true;
-        showAdminControls();
-      } catch (err) {
-        cachedAdminPassword = '';
-        alert("סיסמת מנהל שגויה.");
-      }
-    }
-
-    async function clearChatAction() {
-      const pwd = prompt("הכנס סיסמת מנהל לאיפוס השיחה בחדר הנוכחי:");
-      if (!pwd) return;
-      cachedAdminPassword = pwd;
-      try {
-        const history = await callApi('clearChat');
-        localHistory = history || [];
-        renderChat();
-        alert("השיחה אופסה בהצלחה.");
-      } catch (err) {
-        alert("שגיאה באיפוס: " + err.message);
-      }
-    }
-
-    function createNewRoom() {
-      if (confirm("האם לפתוח חדר שיחה חדש ונקי?")) {
-        const newRoomId = 'room_' + Math.random().toString(36).substring(2, 9);
-        const newUrl = window.location.pathname + '?room=' + newRoomId;
-        window.location.href = newUrl;
-      }
-    }
-
-    async function openRoomsManager() {
-      if (!isAdminAuthenticated) {
-        const pwd = prompt("הכנס סיסמת מנהל לצפייה בחדרים:");
-        if (!pwd) return;
-        cachedAdminPassword = pwd;
-      }
-      
-      document.getElementById('rooms-modal').classList.remove('hidden');
-      const container = document.getElementById('rooms-list-container');
-      container.innerHTML = `<div class="text-center text-slate-400 py-4">טוען רשימת חדרים...</div>`;
-
-      try {
-        const rooms = await callApi('getRoomsList');
-        renderRoomsList(rooms);
-        isAdminAuthenticated = true;
-        showAdminControls();
-      } catch (err) {
-        alert("שגיאה בטעינת החדרים (אולי סיסמה שגויה)");
-        document.getElementById('rooms-modal').classList.add('hidden');
-      }
-    }
-
-    function closeRoomsManager() {
-      document.getElementById('rooms-modal').classList.add('hidden');
-    }
-
-    function renderRoomsList(rooms) {
-      const container = document.getElementById('rooms-list-container');
-      if (!rooms || rooms.length === 0) {
-        container.innerHTML = `<div class="text-center text-slate-400 py-6">אין חדרים פעילים כרגע בזיכרון.</div>`;
-        return;
-      }
-
-      let html = '';
-      rooms.forEach(roomObj => {
-        const rId = roomObj.id;
-        const lastActive = roomObj.lastActive || 'לא ידוע';
-        const roomUrl = window.location.origin + window.location.pathname + '?room=' + rId;
-        const isCurrent = rId === currentRoomId;
-        
-        html += `
-          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl gap-2">
-            <div class="flex flex-col truncate">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-indigo-700">${rId} ${isCurrent ? '(חדר נוכחי)' : ''}</span>
-                <span class="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded">פעילות: ${lastActive}</span>
-              </div>
-              <span class="text-[11px] text-slate-500 truncate select-all mt-0.5">${roomUrl}</span>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button onclick="navigator.clipboard.writeText('${roomUrl}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-xs px-2.5 py-1.5 rounded transition">העתק</button>
-              <a href="${roomUrl}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded transition">מעבר</a>
-              <button onclick="closeSpecificRoom('${rId}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs px-2 py-1.5 rounded transition" title="סגור חדר">🗑️</button>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    async function closeSpecificRoom(targetRoom) {
-      if (!confirm(`האם לסגור ולמחוק את החדר ${targetRoom}?`)) return;
-      try {
-        const updatedRooms = await callApi('closeRoom', { targetRoom });
-        renderRoomsList(updatedRooms);
-      } catch (err) {
-        alert("שגיאה בסגירת החדר: " + err.message);
-      }
-    }
-
-    function showAdminControls() {
-      document.getElementById('admin-login-btn').classList.add('hidden');
-      document.getElementById('admin-controls').classList.remove('hidden');
-    }
-
-    function lockAdminPanel() {
-      isAdminAuthenticated = false;
-      cachedAdminPassword = '';
-      document.getElementById('admin-controls').classList.add('hidden');
-      document.getElementById('admin-login-btn').classList.remove('hidden');
-    }
-
-    function copyRoomLink() {
-      const roomUrl = window.location.href;
-      navigator.clipboard.writeText(roomUrl).then(() => {
-        const btn = document.getElementById('copy-btn');
-        const originalText = btn.innerText;
-        btn.innerText = "הועתק! ✓";
-        btn.classList.add('bg-green-600');
-        setTimeout(() => {
-          btn.innerText = originalText;
-          btn.classList.remove('bg-green-600');
-        }, 2000);
-      });
-    }
-
-    function handleKeyPress(e) {
-      if (e.key === 'Escape') {
-        lockAdminPanel();
-        closeRoomsManager();
-      }
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-      return text.toString().replace(/[&<>"']/g, m => map[m]);
-    }
-
-    // טעינה ראשונית וסנכרון ברקע (כל 3 שניות)
-    fetchHistory();
-    setInterval(() => fetchHistory(true), 3000);
-  </script>
+        // טעינה ראשונית
+        fetchMessages();
+    </script>
 </body>
 </html>
