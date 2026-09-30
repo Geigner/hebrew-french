@@ -32,7 +32,7 @@
           חדר חדש
         </button>
         <button onclick="openRoomsManager()" class="bg-amber-700 hover:bg-amber-800 text-xs px-2.5 py-1.5 rounded transition" title="ניהול חדרים פתוחים">
-          רשימת חדרים 🗂️️
+          רשימת חדרים 🗂
         </button>
         <button onclick="clearChatAction()" class="bg-rose-700 hover:bg-rose-800 text-xs px-2.5 py-1.5 rounded transition">
           איפוס חדר
@@ -141,7 +141,14 @@
           method: 'POST',
           body: JSON.stringify({ action, roomId: currentRoomId, password: cachedAdminPassword, ...payload })
         });
-        const resJson = await response.json();
+        const textResponse = await response.text();
+        let resJson;
+        try {
+          resJson = JSON.parse(textResponse);
+        } catch (e) {
+          throw new Error("תשובת שרת לא תקינה");
+        }
+        
         if (resJson.status === 'success') {
           return resJson.data;
         } else {
@@ -156,15 +163,32 @@
     async function fetchHistory(isBackground = false) {
       if (isSending) return;
       try {
-        const history = await callApi('getHistory');
-        const historyJson = JSON.stringify(history || []);
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getHistory', roomId: currentRoomId, password: cachedAdminPassword })
+        });
         
-        if (historyJson !== JSON.stringify(localHistory)) {
-          localHistory = history || [];
-          renderChat();
+        const textResponse = await response.text();
+        let resJson;
+        try {
+          resJson = JSON.parse(textResponse);
+        } catch (e) {
+          return; // התעלמות שקטה משגיאות סנכרון זמניות ברקע
+        }
+
+        if (resJson.status === 'success') {
+          const history = resJson.data || [];
+          const historyJson = JSON.stringify(history);
+          
+          if (historyJson !== JSON.stringify(localHistory)) {
+            localHistory = history;
+            renderChat();
+          }
         }
       } catch (err) {
-        console.error("שגיאת סנכרון", err);
+        if (!isBackground) {
+          console.error("שגיאת סנכרון", err);
+        }
       }
     }
 
