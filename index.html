@@ -86,7 +86,7 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzkAazteBmoUi-yhSTG09UR92hrMwXb9KQM_nzDT0k5oluVliS16nM17eVnJzf8H-mp/exec";
 
-    let localHistory = null;
+    let localHistory = [];
     let isSending = false;
     let isAdminAuthenticated = false;
     let cachedAdminPassword = '';
@@ -136,31 +136,27 @@
     const currentRoomId = getRoomId();
 
     async function callApi(action, payload = {}) {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, roomId: currentRoomId, password: cachedAdminPassword, ...payload })
+      });
+      const textResponse = await response.text();
+      let resJson;
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action, roomId: currentRoomId, password: cachedAdminPassword, ...payload })
-        });
-        const textResponse = await response.text();
-        let resJson;
-        try {
-          resJson = JSON.parse(textResponse);
-        } catch (e) {
-          throw new Error("תשובת שרת לא תקינה");
-        }
-        
-        if (resJson.status === 'success') {
-          return resJson.data;
-        } else {
-          throw new Error(resJson.message || "שגיאת שרת");
-        }
-      } catch (err) {
-        console.error("API Error:", err);
-        throw err;
+        resJson = JSON.parse(textResponse);
+      } catch (e) {
+        throw new Error("תשובת שרת לא תקינה");
+      }
+      
+      if (resJson.status === 'success') {
+        return resJson.data;
+      } else {
+        throw new Error(resJson.message || "שגיאת שרת");
       }
     }
 
     async function fetchHistory(isBackground = false) {
+      // אם כרגע מתבצעת שליחה, אל תדרוס את ההיסטוריה המקומית כדי למנוע היעלמות זמנית של הודעות
       if (isSending) return;
       try {
         const response = await fetch(API_URL, {
@@ -173,15 +169,15 @@
         try {
           resJson = JSON.parse(textResponse);
         } catch (e) {
-          return; // התעלמות שקטה משגיאות סנכרון זמניות ברקע
+          return; 
         }
 
         if (resJson.status === 'success') {
-          const history = resJson.data || [];
-          const historyJson = JSON.stringify(history);
+          const serverHistory = resJson.data || [];
           
-          if (historyJson !== JSON.stringify(localHistory)) {
-            localHistory = history;
+          // עדכן רק אם יש הבדל באורך או בתוכן כדי למנוע ריצודים
+          if (JSON.stringify(serverHistory) !== JSON.stringify(localHistory)) {
+            localHistory = serverHistory;
             renderChat();
           }
         }
@@ -237,6 +233,7 @@
       input.value = '';
       document.getElementById('send-btn').disabled = true;
 
+      // הוספה מיידית לממשק (Optimistic UI Update)
       const tempItem = {
         original: text,
         translated: "מעבד תרגום...",
@@ -244,7 +241,6 @@
         clientId: currentClientId
       };
       
-      if (!localHistory) localHistory = [];
       localHistory.push(tempItem);
       renderChat();
 
@@ -257,7 +253,7 @@
         renderChat();
       } catch (err) {
         alert("שגיאה בשליחת הודעה: " + err.message);
-        fetchHistory();
+        await fetchHistory();
       } finally {
         isSending = false;
         document.getElementById('send-btn').disabled = false;
@@ -422,6 +418,7 @@
       return text.toString().replace(/[&<>"']/g, m => map[m]);
     }
 
+    // טעינה ראשונית וסנכרון ברקע (כל 3 שניות)
     fetchHistory();
     setInterval(() => fetchHistory(true), 3000);
   </script>
