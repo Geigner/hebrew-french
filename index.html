@@ -21,7 +21,7 @@
     <!-- אזור הניהול -->
     <div class="flex items-center gap-2">
       <button id="admin-login-btn" onclick="openAdminPanel()" class="bg-indigo-800 hover:bg-indigo-900 text-sm p-2 rounded-lg transition border border-indigo-600 flex items-center justify-center" title="כניסת מנהל">
-        ⚙️
+        ⚙️️
       </button>
 
       <div id="admin-controls" class="hidden flex items-center gap-1.5 bg-indigo-800 p-1.5 rounded-lg border border-indigo-500 shadow-lg flex-wrap">
@@ -84,8 +84,8 @@
   </footer>
 
   <script>
-    // עדכן כאן את כתובת ה-Web App שתקבל מגוגל לאחר פריסת הסקריפט (Deploy -> New deployment)
-    const API_URL = "הדבק_כאן_את_כתובת_הווב_אפ_של_גוגל";
+    // ** החלף כאן את כתובת ה-Web App החדשה שתקבל מגוגל **
+    const API_URL = "https://script.google.com/macros/s/AKfycb.../exec";
 
     let localHistory = null;
     let isSending = false;
@@ -399,7 +399,7 @@
       return text.toString().replace(/[&<>"']/g, m => map[m]);
     }
 
-    // הפעלה ראשונית ורענון ברקע כל 3 שניות (ללא ריצוד)
+    // הפעלה ראשונית ורענון ברקע כל 3 שניות
     fetchHistory();
     setInterval(() => fetchHistory(true), 3000);
   </script>
