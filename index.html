@@ -84,7 +84,7 @@
   </footer>
 
   <script>
-    // כתובת השרת המדויקת והמעודכנת מתוך ניהול הפריסות
+    // כתובת השרת המעודכנת מתוך ניהול הפריסות
     const API_URL = "https://script.google.com/macros/s/AKfycbkZaazteBmoUi-yhSTG09UR92hrMwXb9KQM_nzDT0k5oluVlIS16nM17eVnJzf8H-mp/exec";
 
     let localHistory = null;
@@ -136,12 +136,21 @@
 
     const currentRoomId = getRoomId();
 
+    // פונקציית תקשורת מעודכנת המשתמשת בשיטת GET/JSONP עוקפת CORS מול Google Apps Script
     async function callApi(action, payload = {}) {
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action, roomId: currentRoomId, password: cachedAdminPassword, ...payload })
+        const queryParams = new URLSearchParams({
+          action: action,
+          roomId: currentRoomId,
+          password: cachedAdminPassword,
+          data: JSON.stringify(payload)
         });
+
+        const response = await fetch(`${API_URL}?${queryParams.toString()}`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        
         const resJson = await response.json();
         if (resJson.status === 'success') {
           return resJson.data;
@@ -338,7 +347,7 @@
             <div class="flex items-center gap-1.5 shrink-0">
               <button onclick="navigator.clipboard.writeText('${roomUrl}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-xs px-2.5 py-1.5 rounded transition">העתק</button>
               <a href="${roomUrl}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded transition">מעבר</a>
-              <button onclick="closeSpecificRoom('${rId}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs px-2 py-1.5 rounded transition" title="סגור חדר">🗑️</button>
+              <button onclick="closeSpecificRoom('${rId}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs px-2 py-1.5 rounded transition" title="סגור חדר">🗑️️</button>
             </div>
           </div>
         `;
