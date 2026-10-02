@@ -2,24 +2,25 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>גשר שפות - תרגום בזמן אמת</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* תיקון פריסת עמוד ראשית */
+    /* פריסה בסיסית ונגישות */
     body {
       display: flex;
       flex-direction: column;
       height: 100dvh;
       margin: 0;
       overflow: hidden;
-      background-color: #f8fafc; /* bg-slate-50 */
+      background-color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      overscroll-behavior-y: none; /* מונע גלילה מיותרת בניידים */
     }
 
     header {
       flex-shrink: 0;
-      width: 100%;
-      z-index: 10;
+      z-index: 20;
     }
 
     main {
@@ -27,13 +28,13 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      width: 100%;
       max-width: 56rem; /* 4xl */
-      margin-left: auto;
-      margin-right: auto;
+      width: 100%;
+      margin: 0 auto;
+      position: relative;
     }
 
-    /* יישור הודעות לצד ימין */
+    /* הגדרות צ'אט */
     #chat-box {
       flex: 1;
       overflow-y: auto;
@@ -42,6 +43,7 @@
       flex-direction: column;
       gap: 1rem;
       direction: rtl;
+      min-height: 0; /* קריטי למניעת באגים בפריסת flex */
     }
 
     .chat-message-wrapper {
@@ -56,65 +58,73 @@
       max-width: 85%;
       width: fit-content;
       word-wrap: break-word;
-      padding: 0.75rem;
-      border-radius: 1rem;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      padding: 0.75rem 1rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-size: 1rem;
+      line-height: 1.5;
     }
 
-    /* עיצוב כפתורים נוספים */
-    .add-room-btn {
-      background-color: #10b981;
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      font-size: 0.75rem;
-      font-weight: bold;
+    /* כפתורים מיוחדים */
+    .btn-action {
       transition: all 0.2s;
-    }
-    .add-room-btn:hover { background-color: #059669; }
-
-    .copy-room-btn {
-      background-color: #e2e8f0;
-      color: #334155;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 10px;
-      font-weight: bold;
       cursor: pointer;
     }
-    .copy-room-btn:hover { background-color: #cbd5e1; }
+    .btn-action:hover { opacity: 0.9; transform: scale(1.02); }
+    .btn-action:active { transform: scale(0.98); }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #334155;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 100;
+      display: none;
+    }
   </style>
 </head>
-<body class="bg-slate-50">
+<body>
 
+  <!-- כותרת האפליקציה -->
   <header class="bg-indigo-700 text-white shadow-md p-3 sm:p-4 flex justify-between items-center">
     <div class="flex flex-col">
       <h1 class="text-base sm:text-lg font-bold leading-tight">גשר שפות: עברית ⇄ צרפתית</h1>
-      <span class="text-[10px] text-indigo-100" id="room-display">חדר: טוען...</span>
+      <span class="text-[10px] text-indigo-100" id="room-display">טוען חדר...</span>
     </div>
     
     <div class="flex items-center gap-2">
-      <button onclick="toggleAdminView()" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition">⚙</button>
+      <button onclick="toggleAdminView()" aria-label="ניהול והגדרות" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition">
+        <span class="text-xl">⚙</span>
+      </button>
       <div id="admin-controls" class="flex items-center gap-1.5 bg-indigo-900/40 p-1 rounded-lg border border-white/20 hidden">
-        <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded hover:bg-indigo-500 transition">העתק קישור</button>
-        <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded hover:bg-amber-500 transition">ניהול חדרים</button>
+        <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded hover:bg-indigo-500 transition btn-action">העתק קישור</button>
+        <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded hover:bg-amber-500 transition btn-action">חדרים</button>
+        <button onclick="toggleAdminView()" class="px-2 text-white/50 hover:text-white">✕</button>
       </div>
     </div>
   </header>
 
+  <!-- אזור תוכן ראשי -->
   <main>
-    <div id="chat-box">
-      <!-- ההודעות יתווספו כאן דינמית -->
+    <div id="chat-box" role="log" aria-live="polite">
       <div class="text-center text-slate-400 mt-20 p-6 border-2 border-dashed border-slate-200 rounded-2xl mx-4 italic">
-        אין הודעות בחדר זה. כתבו הודעה ראשונה למטה!
+        ממתין להודעות...
       </div>
     </div>
 
-    <!-- אזור הקלט -->
-    <div class="p-3 bg-white border-t border-slate-200 shadow-sm z-20">
+    <!-- תיבת הזנת הודעה -->
+    <div class="p-3 bg-white border-t border-slate-200 shadow-lg z-20">
       <div class="flex gap-2 items-end max-w-4xl mx-auto">
-        <textarea id="message-input" rows="1" placeholder="הקלד הודעה לתרגום..." class="flex-1 border border-slate-300 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-slate-50"></textarea>
-        <button onclick="sendMessage()" class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 transition-all active:scale-95">
+        <textarea id="message-input" rows="1" aria-label="הודעה לתרגום" 
+          placeholder="הקלד הודעה..." 
+          class="flex-1 border border-slate-300 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-slate-50"></textarea>
+        <button onclick="sendMessage()" aria-label="שלח הודעה" 
+          class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 transition-all active:scale-95 btn-action">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 rotate-180">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"></path>
           </svg>
@@ -128,58 +138,74 @@
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[80vh]">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h3 class="font-bold text-slate-800">ניהול חדרים פעילים</h3>
-        <button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button>
+        <button onclick="closeRoomsManager()" class="text-slate-400 text-2xl hover:text-slate-600">✕</button>
       </div>
       <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2">
-        <!-- רשימת חדרים תטען כאן -->
+        <!-- רשימת חדרים תטען כאן דינמית -->
       </div>
-      <div class="mt-4 pt-3 border-t flex justify-between gap-2">
-         <button onclick="createNewRoom()" class="add-room-btn">+ חדר חדש</button>
-         <div>
-           <button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg hover:bg-rose-50 ml-2">איפוס חדר</button>
-           <button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold">סגור</button>
+      <div class="mt-4 pt-3 border-t flex justify-between items-center gap-2">
+         <button onclick="createNewRoom()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 btn-action">+ חדר חדש</button>
+         <div class="flex gap-2">
+           <button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg hover:bg-rose-50 btn-action">איפוס חדר</button>
+           <button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 btn-action">סגור</button>
          </div>
       </div>
     </div>
   </div>
 
+  <div id="copy-toast" class="copy-toast">הועתק ללוח!</div>
+
   <script>
-    // פונקציות עזר
+    // ניהול תצוגת מנהל
     function toggleAdminView() {
-      document.getElementById('admin-controls').classList.toggle('hidden');
+      const controls = document.getElementById('admin-controls');
+      controls.classList.toggle('hidden');
     }
 
     function openRoomsManager() {
       document.getElementById('rooms-modal').classList.remove('hidden');
-      // כאן יש להוסיף לוגיקה לטעינת החדרים לתוך rooms-list-container
+      renderRoomsList(); // פונקציה שתצטרך לממש לטעינת הנתונים
     }
 
     function closeRoomsManager() {
       document.getElementById('rooms-modal').classList.add('hidden');
     }
 
+    // ניהול קישורים וחדרים
+    function copyCurrentRoomLink() {
+      showToast();
+      navigator.clipboard.writeText(window.location.href);
+    }
+
+    function copySpecificRoomLink(roomQuery) {
+      const url = new URL(window.location.origin + window.location.pathname);
+      url.search = roomQuery;
+      navigator.clipboard.writeText(url.href);
+      showToast();
+    }
+
     function createNewRoom() {
       window.location.href = window.location.origin + window.location.pathname;
     }
 
-    function copyCurrentRoomLink() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("קישור לחדר הועתק!");
-      });
+    function showToast() {
+      const toast = document.getElementById('copy-toast');
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2000);
     }
 
-    // פונקציה להוספה דינמית של כפתור העתקה ברשימת החדרים
-    function addCopyButtonToRoomItem(container, roomUrl) {
-      const btn = document.createElement('button');
-      btn.className = 'copy-room-btn';
-      btn.innerText = 'העתק';
-      btn.onclick = () => {
-        navigator.clipboard.writeText(roomUrl);
-        btn.innerText = 'הועתק!';
-        setTimeout(() => btn.innerText = 'העתק', 2000);
-      };
-      container.appendChild(btn);
-    }
+    // פוקוס אוטומטי בכניסה
+    window.onload = () => {
+      document.getElementById('message-input').focus();
+    };
+
+    // התאמת גובה תיבת הטקסט אוטומטית
+    const tx = document.getElementById('message-input');
+    tx.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = (this.scrollHeight) + "px";
+      if (this.scrollHeight > 150) this.style.overflowY = "scroll";
+    });
   </script>
 </body>
 </html>
