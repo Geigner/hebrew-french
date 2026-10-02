@@ -7,31 +7,26 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
-    body { 
-      font-family: 'Assistant', sans-serif; 
-      height: 100vh; height: 100dvh;
-    }
-    .chat-bubble { max-width: 85%; position: relative; }
+    body { font-family: 'Assistant', sans-serif; height: 100vh; height: 100dvh; display: flex; flex-col; overflow: hidden; }
+    .chat-bubble { max-width: 85%; }
     #chat-box::-webkit-scrollbar { width: 4px; }
-    #chat-box::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .typing-indicator::after { content: '...'; animation: blink 1.5s infinite; }
-    @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    #chat-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   </style>
 </head>
-<body class="bg-slate-50 flex flex-col overflow-hidden">
+<body class="bg-slate-50">
 
   <!-- Header -->
-  <header class="bg-indigo-700 text-white shadow-lg p-3 sm:p-4 flex justify-between items-center z-10">
+  <header class="bg-indigo-700 text-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10">
     <div class="flex flex-col">
-      <h1 class="text-base sm:text-lg font-bold leading-tight">גשר שפות ⇄ FR</h1>
-      <span class="text-[10px] opacity-80" id="room-display"></span>
+      <h1 class="text-base sm:text-lg font-bold leading-tight text-white">גשר שפות: עברית ⇄ צרפתית</h1>
+      <span class="text-[10px] text-indigo-100" id="room-display"></span>
     </div>
     
     <div class="flex items-center gap-2">
-      <button id="admin-login-btn" onclick="openAdminPanel()" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition shadow-sm">⚙</button>
+      <button id="admin-login-btn" onclick="toggleAdminView()" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition">⚙</button>
       <div id="admin-controls" class="hidden flex items-center gap-1.5 bg-indigo-900/40 p-1 rounded-lg border border-white/20">
-        <button onclick="copyRoomLink()" id="copy-btn" class="text-[10px] px-2 py-1.5 bg-indigo-600 rounded font-bold uppercase">Link</button>
-        <button onclick="openRoomsManager()" class="text-[10px] px-2 py-1.5 bg-amber-600 rounded font-bold uppercase">Rooms</button>
+        <button onclick="copyRoomLink()" id="copy-btn" class="text-xs px-2 py-1.5 bg-indigo-600 rounded hover:bg-indigo-500 transition">קישור</button>
+        <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded hover:bg-amber-500 transition">חדרים</button>
         <button onclick="lockAdminPanel()" class="px-2 text-white/70 hover:text-white">✕</button>
       </div>
     </div>
@@ -39,19 +34,19 @@
 
   <!-- Chat Area -->
   <main class="flex-1 overflow-hidden flex flex-col max-w-4xl w-full mx-auto relative">
-    <div id="chat-box" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-      <div class="text-center text-slate-400 mt-20">מתחבר לחדר...</div>
+    <div id="chat-box" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div class="text-center text-slate-400 mt-20">טוען שיחה...</div>
     </div>
 
     <!-- Input Area -->
-    <div class="p-3 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+    <div class="p-3 bg-white border-t border-slate-200 shadow-sm z-20">
       <div class="flex gap-2 items-end max-w-4xl mx-auto">
         <textarea id="message-input" rows="1" placeholder="הקלד הודעה לתרגום..." 
           class="flex-1 border border-slate-300 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none overflow-hidden bg-slate-50"
-          oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+          oninput="adjustInputHeight(this)"
           onkeydown="handleKeyPress(event)"></textarea>
         <button onclick="sendMessage()" id="send-btn" 
-          class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 transition-all shrink-0 active:scale-95 disabled:opacity-50">
+          class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 rotate-180">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
@@ -65,11 +60,11 @@
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[80vh]">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h3 class="font-bold text-slate-800">ניהול חדרים פעילים</h3>
-        <button onclick="closeRoomsManager()" class="text-slate-400 hover:text-slate-600 text-2xl">✕</button>
+        <button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button>
       </div>
       <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2"></div>
-      <div class="mt-4 pt-3 border-t flex justify-between">
-         <button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold px-2 py-1">איפוס היסטוריה לחדר זה</button>
+      <div class="mt-4 pt-3 border-t flex justify-between gap-2">
+         <button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg hover:bg-rose-50">איפוס חדר</button>
          <button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold">סגור</button>
       </div>
     </div>
@@ -77,7 +72,6 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzidajjVzi8qVITrGtUFofPkA0qmo2uISugWHSo-1pDMvMrDFOI3UBvH8s3mJyBebR7/exec";
-    
     let localHistory = null;
     let isSending = false;
     let cachedAdminPassword = '';
@@ -96,6 +90,15 @@
     const currentRoomId = getRoomId();
     document.getElementById('room-display').innerText = `חדר: ${currentRoomId}`;
 
+    function adjustInputHeight(el) {
+      el.style.height = '';
+      el.style.height = el.scrollHeight + 'px';
+      if (el.value.length > 0) {
+        const box = document.getElementById('chat-box');
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
     async function callApi(action, payload = {}) {
       const q = new URLSearchParams({ action, roomId: currentRoomId, password: cachedAdminPassword, data: JSON.stringify(payload) });
       const res = await fetch(`${API_URL}?${q.toString()}`);
@@ -104,7 +107,7 @@
       return json.data;
     }
 
-    async function fetchHistory(bg = false) {
+    async function fetchHistory() {
       if (isSending) return;
       try {
         const history = await callApi('getHistory');
@@ -118,7 +121,7 @@
     function renderChat() {
       const box = document.getElementById('chat-box');
       if (!localHistory?.length) {
-        box.innerHTML = '<div class="text-center text-slate-400 mt-20 bg-white/50 p-4 rounded-xl mx-auto border border-dashed border-slate-300">החדר ריק. כתבו הודעה ראשונה!</div>';
+        box.innerHTML = '<div class="text-center text-slate-400 mt-20 p-6 border-2 border-dashed border-slate-200 rounded-2xl mx-4 italic">אין הודעות בחדר זה. כתבו הודעה ראשונה למעלה!</div>';
         return;
       }
 
@@ -127,14 +130,14 @@
       box.innerHTML = localHistory.map(m => {
         const isMe = m.clientId === currentClientId;
         return `
-          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
             <div class="chat-bubble p-3 rounded-2xl shadow-sm border ${isMe ? 'bg-indigo-600 text-white border-indigo-500 rounded-br-none' : 'bg-white text-slate-800 border-slate-200 rounded-bl-none'}">
               <div class="text-[9px] opacity-70 mb-1 font-bold flex justify-between gap-4">
                 <span>${isMe ? 'אני' : 'משתתף'}</span>
                 <span>${m.time}</span>
               </div>
               <div class="text-sm sm:text-base leading-tight break-words">${escapeHtml(m.original)}</div>
-              <div class="mt-2 pt-2 border-t ${isMe ? 'border-white/20 text-indigo-50' : 'border-slate-100 text-indigo-700'} font-semibold text-sm italic dir="auto">
+              <div class="mt-2 pt-2 border-t ${isMe ? 'border-indigo-400/40 text-indigo-50' : 'border-slate-100 text-indigo-700'} font-semibold text-sm italic dir="auto">
                 ${escapeHtml(m.translated)}
               </div>
             </div>
@@ -159,15 +162,9 @@
         const newHistory = await callApi('sendMessage', { text, clientId: currentClientId });
         localHistory = newHistory;
         renderChat();
-        const box = document.getElementById('chat-box');
-        box.scrollTop = box.scrollHeight;
-      } catch (e) { 
-        alert("שגיאה בשליחה. נסה שוב."); 
-        input.value = text;
-      } finally {
-        isSending = false;
-        document.getElementById('send-btn').disabled = false;
-      }
+        document.getElementById('chat-box').scrollTo({ top: document.getElementById('chat-box').scrollHeight, behavior: 'smooth' });
+      } catch (e) { alert("שגיאה בשליחה: " + e.message); }
+      finally { isSending = false; document.getElementById('send-btn').disabled = false; }
     }
 
     function handleKeyPress(e) {
@@ -175,26 +172,27 @@
         e.preventDefault();
         sendMessage();
       }
-      if (e.key === 'Escape') lockAdminPanel();
     }
 
-    function openAdminPanel() {
-      if (cachedAdminPassword) { openRoomsManager(); return; }
-      const p = prompt("סיסמת מנהל:");
-      if (p) { cachedAdminPassword = p; openRoomsManager(); }
+    function toggleAdminView() {
+      if (cachedAdminPassword) { openRoomsManager(); } 
+      else {
+        const p = prompt("הכנס סיסמת מנהל:");
+        if (p) { cachedAdminPassword = p; openRoomsManager(); }
+      }
     }
 
     async function openRoomsManager() {
-      document.getElementById('rooms-modal').classList.remove('hidden');
       const container = document.getElementById('rooms-list-container');
-      container.innerHTML = '<div class="text-center p-10 typing-indicator">טוען חדרים</div>';
+      document.getElementById('rooms-modal').classList.remove('hidden');
+      container.innerHTML = '<div class="text-center p-10 italic text-slate-400">טוען רשימת חדרים...</div>';
       try {
         const rooms = await callApi('getRoomsList');
         document.getElementById('admin-controls').classList.remove('hidden');
         document.getElementById('admin-login-btn').classList.add('hidden');
         renderRoomsList(rooms);
       } catch (e) { 
-        alert("סיסמה שגויה או שגיאת חיבור"); 
+        alert("סיסמה שגויה"); 
         cachedAdminPassword = '';
         closeRoomsManager(); 
       }
@@ -202,15 +200,12 @@
 
     function renderRoomsList(rooms) {
       const container = document.getElementById('rooms-list-container');
-      if (!rooms.length) {
-        container.innerHTML = '<div class="text-center text-slate-400">אין חדרים פעילים.</div>';
-        return;
-      }
+      if (!rooms.length) { container.innerHTML = '<div class="p-4 text-center">אין חדרים פעילים.</div>'; return; }
       container.innerHTML = rooms.map(r => `
         <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
           <div class="truncate flex-1">
-            <div class="text-xs font-bold text-indigo-700">${r.id} ${r.id === currentRoomId ? '⭐' : ''}</div>
-            <div class="text-[10px] text-slate-500">פעילות: ${r.lastActive}</div>
+            <div class="text-xs font-bold text-indigo-700">${r.id} ${r.id === currentRoomId ? '(נוכחי)' : ''}</div>
+            <div class="text-[10px] text-slate-500">${r.lastActive}</div>
           </div>
           <div class="flex gap-1">
             <a href="?room=${r.id}" class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-1 rounded font-bold">כניסה</a>
@@ -221,20 +216,20 @@
     }
 
     async function closeSpecificRoom(id) {
-      if (confirm(`למחוק את חדר ${id} לצמיתות?`)) {
+      if (confirm(`למחוק את חדר ${id}?`)) {
         const updated = await callApi('closeRoom', { targetRoom: id });
         renderRoomsList(updated);
       }
     }
 
     async function clearCurrentChat() {
-      if (confirm("האם למחוק את כל היסטוריית ההודעות בחדר הנוכחי?")) {
+      if (confirm("האם למחוק את כל ההודעות בחדר זה?")) {
         try {
           await callApi('clearChat');
           localHistory = [];
           renderChat();
           closeRoomsManager();
-        } catch(e) { alert("שגיאה בפעולה"); }
+        } catch(e) { alert("שגיאה"); }
       }
     }
 
@@ -248,15 +243,15 @@
     function copyRoomLink() {
       navigator.clipboard.writeText(window.location.href);
       const btn = document.getElementById('copy-btn');
-      btn.innerText = "OK!";
-      setTimeout(() => btn.innerText = "Link", 2000);
+      btn.innerText = "הועתק!";
+      setTimeout(() => btn.innerText = "קישור", 2000);
     }
 
     function closeRoomsManager() { document.getElementById('rooms-modal').classList.add('hidden'); }
     function escapeHtml(t) { return t ? t.toString().replace(/[&<>"']/g, m => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#039;'}[m])) : ''; }
 
     fetchHistory();
-    setInterval(() => fetchHistory(true), 4000);
+    setInterval(fetchHistory, 4000);
   </script>
 </body>
 </html>
