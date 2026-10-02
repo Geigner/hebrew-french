@@ -15,16 +15,18 @@
     .btn-action { transition: all 0.2s; cursor: pointer; }
     .btn-action:hover { opacity: 0.9; transform: scale(1.02); }
     .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 100; display: none; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <header class="bg-indigo-700 text-white shadow-md p-3 sm:p-4 flex justify-between items-center">
     <div class="flex flex-col">
-      <h1 class="text-base sm:text-lg font-bold">גשר שפות</h1>
+      <h1 class="text-base sm:text-lg font-bold select-none cursor-pointer" id="app-title">גשר שפות: עברית ⇄ צרפתית</h1>
       <span class="text-[10px] text-indigo-100" id="room-display">טוען...</span>
     </div>
     <div class="flex items-center gap-2">
-      <button id="admin-login-btn" onclick="toggleAdminView()" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition btn-action">⚙</button>
+      <!-- כפתור גלגל השיניים מוסתר כברירת מחדל -->
+      <button id="admin-login-btn" onclick="toggleAdminView()" class="hidden bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition btn-action">⚙</button>
       <div id="admin-controls" class="flex items-center gap-1.5 bg-indigo-900/40 p-1 rounded-lg border border-white/20 hidden">
         <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded btn-action">קישור</button>
         <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded btn-action">חדרים</button>
@@ -47,18 +49,18 @@
 
   <div id="rooms-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[80vh]">
-      <div class="flex justify-between items-center border-b pb-3 mb-4"><h3 class="font-bold">ניהול חדרים</h3><button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button></div>
+      <div class="flex justify-between items-center border-b pb-3 mb-4"><h3 class="font-bold">ניהול חדרים פעילים</h3><button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button></div>
       <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2"></div>
       <div class="mt-4 pt-3 border-t flex justify-between gap-2">
          <button onclick="createNewRoom()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold btn-action">+ חדר חדש</button>
-         <div class="flex gap-2"><button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg btn-action">איפוס</button><button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold">סגור</button></div>
+         <div class="flex gap-2"><button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg btn-action">איפוס חדר</button><button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold">סגור</button></div>
       </div>
     </div>
   </div>
   <div id="copy-toast" class="copy-toast">הועתק ללוח!</div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzidajjVzi8qVITrGtUFofPkA0qmo2uISugWHSo-1pDMvMrDFOI3UBvH8s3mJyBebR7/exec";
+    const API_URL = "כתובת_ה-API_שלך_כאן";
     let localHistory = null, isSending = false, cachedAdminPassword = '';
     const currentClientId = (localStorage.getItem('bridge_client_id_fr') || 'c_' + Math.random().toString(36).substr(2, 9));
     localStorage.setItem('bridge_client_id_fr', currentClientId);
@@ -71,6 +73,19 @@
     };
     const currentRoomId = getRoomId();
     document.getElementById('room-display').innerText = `חדר: ${currentRoomId}`;
+
+    // מנגנון לחיצה ארוכה לכניסת מנהל
+    let adminTimer;
+    const titleEl = document.getElementById('app-title');
+    const gearBtn = document.getElementById('admin-login-btn');
+
+    if (localStorage.getItem('bridge_admin_unlocked') === 'true') { gearBtn.classList.remove('hidden'); }
+
+    const startTimer = () => { adminTimer = setTimeout(() => { gearBtn.classList.remove('hidden'); localStorage.setItem('bridge_admin_unlocked', 'true'); alert("מצב מנהל הופעל"); }, 3000); };
+    titleEl.onmousedown = startTimer;
+    titleEl.onmouseup = () => clearTimeout(adminTimer);
+    titleEl.ontouchstart = startTimer;
+    titleEl.ontouchend = () => clearTimeout(adminTimer);
 
     function adjustInputHeight(el) { el.style.height = ''; el.style.height = el.scrollHeight + 'px'; }
     function handleKeyPress(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
@@ -124,7 +139,7 @@
     async function openRoomsManager() {
       const container = document.getElementById('rooms-list-container');
       document.getElementById('rooms-modal').classList.remove('hidden');
-      container.innerHTML = '<div class="text-center p-10 italic text-slate-400">טוען...</div>';
+      container.innerHTML = '<div class="text-center p-10 italic text-slate-400">טוען חדרים...</div>';
       try {
         const rooms = await callApi('getRoomsList');
         document.getElementById('admin-controls').classList.remove('hidden');
@@ -136,11 +151,19 @@
     function renderRoomsList(rooms) {
       const container = document.getElementById('rooms-list-container');
       container.innerHTML = rooms.map(r => `<div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <div class="truncate flex-1"><div class="text-xs font-bold text-indigo-700">${r.id}</div><div class="text-[10px] text-slate-500">${r.lastActive}</div></div>
+          <div class="truncate flex-1"><div class="text-xs font-bold text-indigo-700">${r.id} ${r.id === currentRoomId ? '(נוכחי)' : ''}</div><div class="text-[10px] text-slate-500">${r.lastActive}</div></div>
           <div class="flex gap-1">
             <button onclick="copySpecificRoomLink('?room=${r.id}')" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-1 rounded font-bold btn-action">העתק</button>
             <a href="?room=${r.id}" class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-1 rounded font-bold">כניסה</a>
+            <button onclick="closeSpecificRoom('${r.id}')" class="bg-rose-100 text-rose-700 text-[10px] px-2 py-1 rounded font-bold btn-action">מחק</button>
           </div></div>`).join('');
+    }
+
+    async function closeSpecificRoom(id) {
+      if (confirm(`למחוק את חדר ${id}?`)) {
+        const updated = await callApi('closeRoom', { targetRoom: id });
+        renderRoomsList(updated);
+      }
     }
 
     function copyCurrentRoomLink() { navigator.clipboard.writeText(window.location.href); showToast(); }
@@ -149,6 +172,7 @@
     function closeRoomsManager() { document.getElementById('rooms-modal').classList.add('hidden'); }
     function lockAdminPanel() { cachedAdminPassword = ''; document.getElementById('admin-controls').classList.add('hidden'); document.getElementById('admin-login-btn').classList.remove('hidden'); closeRoomsManager(); }
     function showToast() { const t = document.getElementById('copy-toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+    async function clearCurrentChat() { if (confirm("למחוק את כל ההודעות בחדר?")) { await callApi('clearChat'); localHistory = []; renderChat(); closeRoomsManager(); } }
 
     window.onload = () => document.getElementById('message-input').focus();
     fetchHistory(); setInterval(fetchHistory, 4000);
