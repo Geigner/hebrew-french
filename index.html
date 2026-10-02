@@ -64,6 +64,9 @@
     const currentClientId = (localStorage.getItem('bridge_client_id_fr') || 'c_' + Math.random().toString(36).substr(2, 9));
     localStorage.setItem('bridge_client_id_fr', currentClientId);
 
+    // הסרת הבדיקה של LocalStorage כדי שגלגל השיניים תמיד יתחיל מוסתר לחלוטין
+    localStorage.removeItem('bridge_admin_unlocked');
+
     const escapeHtml = (t) => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
 
     const getRoomId = () => {
@@ -78,12 +81,10 @@
     let adminTimer;
     const titleEl = document.getElementById('app-title');
     const gearBtn = document.getElementById('admin-login-btn');
-    if (localStorage.getItem('bridge_admin_unlocked') === 'true') { gearBtn.classList.remove('hidden'); }
     
     const startTimer = () => { 
       adminTimer = setTimeout(() => { 
         gearBtn.classList.remove('hidden'); 
-        localStorage.setItem('bridge_admin_unlocked', 'true'); 
         alert("מצב מנהל הופעל"); 
       }, 3000); 
     };
