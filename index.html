@@ -155,11 +155,12 @@
 
     function renderRoomsList(rooms) {
       const container = document.getElementById('rooms-list-container');
+      if (!rooms?.length) { container.innerHTML = '<div class="text-center p-6 italic text-slate-400">אין חדרים פעילים.</div>'; return; }
       container.innerHTML = rooms.map(r => `
         <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
           <div class="truncate flex-1">
             <div class="text-xs font-bold text-indigo-700">${r.id}</div>
-            <div class="text-[10px] text-slate-500">${r.lastActive}</div>
+            <div class="text-[10px] text-slate-500">${r.lastActive || ''}</div>
           </div>
           <div class="flex gap-1">
             <button onclick="copySpecificRoomLink('?room=${r.id}')" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-1 rounded font-bold btn-action">העתק</button>
