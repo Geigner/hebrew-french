@@ -48,7 +48,7 @@
 
   <div id="rooms-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[80vh]">
-      <div class="flex justify-between items-center border-b pb-3 mb-4"><h3 class="font-bold">ניהול חדרים</h3><button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button></div>
+      <div class="flex justify-between items-center border-b pb-3 mb-4"><h3 class="font-bold">ניהול חדרים</h3><button onclick="closeRoomsManager()" class="text-slate-400 text-2xl hover:text-slate-600">✕</button></div>
       <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2"></div>
       <div class="mt-4 pt-3 border-t flex justify-between gap-2">
          <button onclick="createNewRoom()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold btn-action">+ חדר חדש</button>
@@ -79,7 +79,14 @@
     const titleEl = document.getElementById('app-title');
     const gearBtn = document.getElementById('admin-login-btn');
     if (localStorage.getItem('bridge_admin_unlocked') === 'true') { gearBtn.classList.remove('hidden'); }
-    const startTimer = () => { adminTimer = setTimeout(() => { gearBtn.classList.remove('hidden'); localStorage.setItem('bridge_admin_unlocked', 'true'); alert("מצב מנהל הופעל"); }, 3000); };
+    
+    const startTimer = () => { 
+      adminTimer = setTimeout(() => { 
+        gearBtn.classList.remove('hidden'); 
+        localStorage.setItem('bridge_admin_unlocked', 'true'); 
+        alert("מצב מנהל הופעל"); 
+      }, 3000); 
+    };
     titleEl.onmousedown = startTimer;
     titleEl.onmouseup = () => clearTimeout(adminTimer);
     titleEl.ontouchstart = startTimer;
@@ -148,13 +155,18 @@
 
     function renderRoomsList(rooms) {
       const container = document.getElementById('rooms-list-container');
-      container.innerHTML = rooms.map(r => `<div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <div class="truncate flex-1"><div class="text-xs font-bold text-indigo-700">${r.id}</div><div class="text-[10px] text-slate-500">${r.lastActive}</div></div>
+      container.innerHTML = rooms.map(r => `
+        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div class="truncate flex-1">
+            <div class="text-xs font-bold text-indigo-700">${r.id}</div>
+            <div class="text-[10px] text-slate-500">${r.lastActive}</div>
+          </div>
           <div class="flex gap-1">
             <button onclick="copySpecificRoomLink('?room=${r.id}')" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-1 rounded font-bold btn-action">העתק</button>
             <a href="?room=${r.id}" class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-1 rounded font-bold">כניסה</a>
             <button onclick="deleteRoom('${r.id}')" class="bg-rose-100 text-rose-700 text-[10px] px-2 py-1 rounded font-bold btn-action">מחק</button>
-          </div></div>`).join('');
+          </div>
+        </div>`).join('');
     }
 
     async function deleteRoom(id) {
@@ -172,8 +184,11 @@
     function showToast() { const t = document.getElementById('copy-toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
     async function clearCurrentChat() { if (confirm("לאפס את החדר?")) { await callApi('clearChat'); localHistory = []; renderChat(); } }
 
-    window.onload = () => document.getElementById('message-input').focus();
-    fetchHistory(); setInterval(fetchHistory, 4000);
+    window.onload = () => {
+        document.getElementById('message-input').focus();
+        fetchHistory(); 
+        setInterval(fetchHistory, 4000);
+    };
   </script>
 </body>
 </html>
