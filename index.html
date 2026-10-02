@@ -6,206 +6,152 @@
   <title>גשר שפות - תרגום בזמן אמת</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* פריסה בסיסית ונגישות */
-    body {
-      display: flex;
-      flex-direction: column;
-      height: 100dvh;
-      margin: 0;
-      overflow: hidden;
-      background-color: #f8fafc;
-      font-family: system-ui, -apple-system, sans-serif;
-      overscroll-behavior-y: none; /* מונע גלילה מיותרת בניידים */
-    }
-
-    header {
-      flex-shrink: 0;
-      z-index: 20;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      max-width: 56rem; /* 4xl */
-      width: 100%;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    /* הגדרות צ'אט */
-    #chat-box {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      direction: rtl;
-      min-height: 0; /* קריטי למניעת באגים בפריסת flex */
-    }
-
-    .chat-message-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start; /* ימין ב-RTL */
-      width: 100%;
-    }
-
-    .chat-bubble {
-      align-self: flex-start;
-      max-width: 85%;
-      width: fit-content;
-      word-wrap: break-word;
-      padding: 0.75rem 1rem;
-      border-radius: 1.25rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      font-size: 1rem;
-      line-height: 1.5;
-    }
-
-    /* כפתורים מיוחדים */
-    .btn-action {
-      transition: all 0.2s;
-      cursor: pointer;
-    }
+    body { display: flex; flex-direction: column; height: 100dvh; margin: 0; overflow: hidden; background-color: #f8fafc; font-family: system-ui, sans-serif; overscroll-behavior-y: none; }
+    header { flex-shrink: 0; z-index: 20; }
+    main { flex: 1; display: flex; flex-direction: column; overflow: hidden; max-width: 56rem; width: 100%; margin: 0 auto; position: relative; }
+    #chat-box { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; direction: rtl; min-height: 0; }
+    .chat-message-wrapper { display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
+    .chat-bubble { align-self: flex-start; max-width: 85%; width: fit-content; padding: 0.75rem 1rem; border-radius: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .btn-action { transition: all 0.2s; cursor: pointer; }
     .btn-action:hover { opacity: 0.9; transform: scale(1.02); }
-    .btn-action:active { transform: scale(0.98); }
-
-    .copy-toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #334155;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      z-index: 100;
-      display: none;
-    }
+    .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 100; display: none; }
   </style>
 </head>
 <body>
-
-  <!-- כותרת האפליקציה -->
   <header class="bg-indigo-700 text-white shadow-md p-3 sm:p-4 flex justify-between items-center">
     <div class="flex flex-col">
-      <h1 class="text-base sm:text-lg font-bold leading-tight">גשר שפות: עברית ⇄ צרפתית</h1>
-      <span class="text-[10px] text-indigo-100" id="room-display">טוען חדר...</span>
+      <h1 class="text-base sm:text-lg font-bold">גשר שפות</h1>
+      <span class="text-[10px] text-indigo-100" id="room-display">טוען...</span>
     </div>
-    
     <div class="flex items-center gap-2">
-      <button onclick="toggleAdminView()" aria-label="ניהול והגדרות" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition">
-        <span class="text-xl">⚙</span>
-      </button>
+      <button id="admin-login-btn" onclick="toggleAdminView()" class="bg-indigo-800 p-2 rounded-lg border border-indigo-500 hover:bg-indigo-900 transition btn-action">⚙</button>
       <div id="admin-controls" class="flex items-center gap-1.5 bg-indigo-900/40 p-1 rounded-lg border border-white/20 hidden">
-        <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded hover:bg-indigo-500 transition btn-action">העתק קישור</button>
-        <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded hover:bg-amber-500 transition btn-action">חדרים</button>
-        <button onclick="toggleAdminView()" class="px-2 text-white/50 hover:text-white">✕</button>
+        <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded btn-action">קישור</button>
+        <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded btn-action">חדרים</button>
+        <button onclick="lockAdminPanel()" class="px-2 text-white/50 hover:text-white">✕</button>
       </div>
     </div>
   </header>
 
-  <!-- אזור תוכן ראשי -->
   <main>
-    <div id="chat-box" role="log" aria-live="polite">
-      <div class="text-center text-slate-400 mt-20 p-6 border-2 border-dashed border-slate-200 rounded-2xl mx-4 italic">
-        ממתין להודעות...
-      </div>
-    </div>
-
-    <!-- תיבת הזנת הודעה -->
+    <div id="chat-box"></div>
     <div class="p-3 bg-white border-t border-slate-200 shadow-lg z-20">
       <div class="flex gap-2 items-end max-w-4xl mx-auto">
-        <textarea id="message-input" rows="1" aria-label="הודעה לתרגום" 
-          placeholder="הקלד הודעה..." 
-          class="flex-1 border border-slate-300 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-slate-50"></textarea>
-        <button onclick="sendMessage()" aria-label="שלח הודעה" 
-          class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 transition-all active:scale-95 btn-action">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 rotate-180">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"></path>
-          </svg>
+        <textarea id="message-input" rows="1" oninput="adjustInputHeight(this)" onkeydown="handleKeyPress(event)" placeholder="הקלד הודעה..." class="flex-1 border border-slate-300 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-slate-50"></textarea>
+        <button onclick="sendMessage()" id="send-btn" class="bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-indigo-700 active:scale-95 btn-action">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"></path></svg>
         </button>
       </div>
     </div>
   </main>
 
-  <!-- מודאל ניהול חדרים -->
   <div id="rooms-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[80vh]">
-      <div class="flex justify-between items-center border-b pb-3 mb-4">
-        <h3 class="font-bold text-slate-800">ניהול חדרים פעילים</h3>
-        <button onclick="closeRoomsManager()" class="text-slate-400 text-2xl hover:text-slate-600">✕</button>
-      </div>
-      <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2">
-        <!-- רשימת חדרים תטען כאן דינמית -->
-      </div>
-      <div class="mt-4 pt-3 border-t flex justify-between items-center gap-2">
-         <button onclick="createNewRoom()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 btn-action">+ חדר חדש</button>
-         <div class="flex gap-2">
-           <button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg hover:bg-rose-50 btn-action">איפוס חדר</button>
-           <button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 btn-action">סגור</button>
-         </div>
+      <div class="flex justify-between items-center border-b pb-3 mb-4"><h3 class="font-bold">ניהול חדרים</h3><button onclick="closeRoomsManager()" class="text-slate-400 text-2xl">✕</button></div>
+      <div id="rooms-list-container" class="overflow-y-auto flex-1 flex flex-col gap-2"></div>
+      <div class="mt-4 pt-3 border-t flex justify-between gap-2">
+         <button onclick="createNewRoom()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold btn-action">+ חדר חדש</button>
+         <div class="flex gap-2"><button onclick="clearCurrentChat()" class="text-rose-600 text-xs font-bold border border-rose-100 px-3 py-2 rounded-lg btn-action">איפוס</button><button onclick="closeRoomsManager()" class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-bold">סגור</button></div>
       </div>
     </div>
   </div>
-
   <div id="copy-toast" class="copy-toast">הועתק ללוח!</div>
 
   <script>
-    // ניהול תצוגת מנהל
-    function toggleAdminView() {
-      const controls = document.getElementById('admin-controls');
-      controls.classList.toggle('hidden');
-    }
+    const API_URL = "https://script.google.com/macros/s/AKfycbzidajjVzi8qVITrGtUFofPkA0qmo2uISugWHSo-1pDMvMrDFOI3UBvH8s3mJyBebR7/exec";
+    let localHistory = null, isSending = false, cachedAdminPassword = '';
+    const currentClientId = (localStorage.getItem('bridge_client_id_fr') || 'c_' + Math.random().toString(36).substr(2, 9));
+    localStorage.setItem('bridge_client_id_fr', currentClientId);
 
-    function openRoomsManager() {
-      document.getElementById('rooms-modal').classList.remove('hidden');
-      renderRoomsList(); // פונקציה שתצטרך לממש לטעינת הנתונים
-    }
-
-    function closeRoomsManager() {
-      document.getElementById('rooms-modal').classList.add('hidden');
-    }
-
-    // ניהול קישורים וחדרים
-    function copyCurrentRoomLink() {
-      showToast();
-      navigator.clipboard.writeText(window.location.href);
-    }
-
-    function copySpecificRoomLink(roomQuery) {
-      const url = new URL(window.location.origin + window.location.pathname);
-      url.search = roomQuery;
-      navigator.clipboard.writeText(url.href);
-      showToast();
-    }
-
-    function createNewRoom() {
-      window.location.href = window.location.origin + window.location.pathname;
-    }
-
-    function showToast() {
-      const toast = document.getElementById('copy-toast');
-      toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 2000);
-    }
-
-    // פוקוס אוטומטי בכניסה
-    window.onload = () => {
-      document.getElementById('message-input').focus();
+    const getRoomId = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      let r = urlParams.get('room');
+      if (!r) { r = 'R-' + Math.random().toString(36).substr(2, 5).toUpperCase(); window.history.replaceState({}, '', `?room=${r}`); }
+      return r;
     };
+    const currentRoomId = getRoomId();
+    document.getElementById('room-display').innerText = `חדר: ${currentRoomId}`;
 
-    // התאמת גובה תיבת הטקסט אוטומטית
-    const tx = document.getElementById('message-input');
-    tx.addEventListener("input", function() {
-      this.style.height = "auto";
-      this.style.height = (this.scrollHeight) + "px";
-      if (this.scrollHeight > 150) this.style.overflowY = "scroll";
-    });
+    function adjustInputHeight(el) { el.style.height = ''; el.style.height = el.scrollHeight + 'px'; }
+    function handleKeyPress(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+    async function callApi(action, payload = {}) {
+      const q = new URLSearchParams({ action, roomId: currentRoomId, password: cachedAdminPassword, data: JSON.stringify(payload) });
+      const res = await fetch(`${API_URL}?${q.toString()}`);
+      const json = await res.json();
+      if (json.status !== 'success') throw new Error(json.message);
+      return json.data;
+    }
+
+    async function fetchHistory() {
+      if (isSending) return;
+      try {
+        const history = await callApi('getHistory');
+        if (JSON.stringify(history) !== JSON.stringify(localHistory)) { localHistory = history; renderChat(); }
+      } catch (e) { console.error(e); }
+    }
+
+    function renderChat() {
+      const box = document.getElementById('chat-box');
+      if (!localHistory?.length) { box.innerHTML = '<div class="text-center text-slate-400 mt-20 italic">אין הודעות.</div>'; return; }
+      const shouldScroll = box.scrollHeight - box.scrollTop <= box.clientHeight + 150;
+      box.innerHTML = localHistory.map(m => {
+        const isMe = m.clientId === currentClientId;
+        return `<div class="chat-message-wrapper ${isMe ? 'items-end' : 'items-start'}">
+            <div class="chat-bubble ${isMe ? 'bg-indigo-600 text-white' : 'bg-white text-slate-800 border border-slate-200'}">
+              <div class="text-[9px] opacity-70 mb-1 flex justify-between gap-4"><span>${isMe ? 'אני' : 'משתתף'}</span><span>${m.time}</span></div>
+              <div class="text-sm">${m.original}</div>
+              <div class="mt-2 pt-2 border-t ${isMe ? 'border-indigo-400/40 text-indigo-50' : 'border-slate-100 text-indigo-700'} font-semibold text-sm italic">${m.translated}</div>
+            </div></div>`;
+      }).join('');
+      if (shouldScroll) box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+      if (!text || isSending) return;
+      isSending = true; input.value = ''; input.style.height = '';
+      try { localHistory = await callApi('sendMessage', { text, clientId: currentClientId }); renderChat(); }
+      catch (e) { alert(e.message); } finally { isSending = false; }
+    }
+
+    function toggleAdminView() {
+      if (cachedAdminPassword) openRoomsManager();
+      else { const p = prompt("סיסמת מנהל:"); if (p) { cachedAdminPassword = p; openRoomsManager(); } }
+    }
+
+    async function openRoomsManager() {
+      const container = document.getElementById('rooms-list-container');
+      document.getElementById('rooms-modal').classList.remove('hidden');
+      container.innerHTML = '<div class="text-center p-10 italic text-slate-400">טוען...</div>';
+      try {
+        const rooms = await callApi('getRoomsList');
+        document.getElementById('admin-controls').classList.remove('hidden');
+        document.getElementById('admin-login-btn').classList.add('hidden');
+        renderRoomsList(rooms);
+      } catch (e) { alert("סיסמה שגויה"); cachedAdminPassword = ''; closeRoomsManager(); }
+    }
+
+    function renderRoomsList(rooms) {
+      const container = document.getElementById('rooms-list-container');
+      container.innerHTML = rooms.map(r => `<div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div class="truncate flex-1"><div class="text-xs font-bold text-indigo-700">${r.id}</div><div class="text-[10px] text-slate-500">${r.lastActive}</div></div>
+          <div class="flex gap-1">
+            <button onclick="copySpecificRoomLink('?room=${r.id}')" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-1 rounded font-bold btn-action">העתק</button>
+            <a href="?room=${r.id}" class="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-1 rounded font-bold">כניסה</a>
+          </div></div>`).join('');
+    }
+
+    function copyCurrentRoomLink() { navigator.clipboard.writeText(window.location.href); showToast(); }
+    function copySpecificRoomLink(q) { const url = new URL(window.location.origin + window.location.pathname); url.search = q; navigator.clipboard.writeText(url.href); showToast(); }
+    function createNewRoom() { window.location.href = window.location.origin + window.location.pathname; }
+    function closeRoomsManager() { document.getElementById('rooms-modal').classList.add('hidden'); }
+    function lockAdminPanel() { cachedAdminPassword = ''; document.getElementById('admin-controls').classList.add('hidden'); document.getElementById('admin-login-btn').classList.remove('hidden'); closeRoomsManager(); }
+    function showToast() { const t = document.getElementById('copy-toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+
+    window.onload = () => document.getElementById('message-input').focus();
+    fetchHistory(); setInterval(fetchHistory, 4000);
   </script>
 </body>
 </html>
