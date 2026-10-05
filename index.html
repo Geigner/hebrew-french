@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>גשר שפות - תרגום בזמן אמת</title>
   
-  <!-- טעינת CSS סטטית וישירה לביצועים מרביים -->
   <link rel="stylesheet" href="./output.css">
 
   <style>
@@ -112,10 +111,18 @@
 
     async function callApi(action, payload = {}) {
       const q = new URLSearchParams({ action, roomId: currentRoomId, password: cachedAdminPassword, data: JSON.stringify(payload) });
-      const res = await fetch(`${API_URL}?${q.toString()}`);
-      const json = await res.json();
-      if (json.status !== 'success') throw new Error(json.message);
-      return json.data;
+      const res = await fetch(`${API_URL}?${q.toString()}`, { redirect: 'follow' });
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (json.status !== 'success') throw new Error(json.message);
+        return json.data;
+      } catch (e) {
+        if (text.startsWith('<!DOCTYPE')) {
+          throw new Error('תקלה בתקשורת עם השרת');
+        }
+        throw e;
+      }
     }
 
     async function fetchHistory() {
