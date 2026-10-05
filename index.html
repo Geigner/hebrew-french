@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>גשר שפות - תרגום בזמן אמת</title>
   
-  <!-- טעינה אסינכרונית של ה-CSS כדי למנוע חסימת רינדור (Render-Blocking) -->
-  <link rel="preload" href="./output.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="./output.css"></noscript>
+  <!-- טעינת CSS סטטית וישירה לביצועים מרביים -->
+  <link rel="stylesheet" href="./output.css">
 
   <style>
     body { display: flex; flex-direction: column; height: 100dvh; margin: 0; overflow: hidden; background-color: #f8fafc; font-family: system-ui, sans-serif; overscroll-behavior-y: none; }
@@ -127,11 +126,8 @@
       } catch (e) { console.error(e); }
     }
 
-    // פונקציית renderChat מותאמת למניעת Forced Reflow / Layout Thrashing
     function renderChat() {
       const box = document.getElementById('chat-box');
-      
-      // 1. קריאת מידות ה-DOM קודם (מבלי לכתוב קודם ל-DOM)
       const shouldScroll = box.scrollHeight - box.scrollTop <= box.clientHeight + 150;
 
       if (!localHistory?.length) { 
@@ -139,7 +135,6 @@
         return; 
       }
 
-      // 2. בניית האלמנטים בזיכרון (Fragment)
       const fragment = document.createDocumentFragment();
       localHistory.forEach(m => {
         const isMe = m.clientId === currentClientId;
@@ -154,7 +149,6 @@
         fragment.appendChild(wrapper);
       });
 
-      // 3. עדכון יחיד של ה-DOM בעזרת requestAnimationFrame למניעת עומס חישוב (Layout)
       requestAnimationFrame(() => {
         box.innerHTML = '';
         box.appendChild(fragment);
