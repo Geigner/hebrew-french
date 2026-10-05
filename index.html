@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>גשר שפות - תרגום בזמן אמת</title>
   
-  <!-- קישור לקובץ ה-CSS הסטטי שיצרנו -->
-  <link rel="stylesheet" href="./output.css">
+  <!-- טעינה אסינכרונית של ה-CSS כדי למנוע חסימת רינדור (Render-Blocking) -->
+  <link rel="preload" href="./output.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="./output.css"></noscript>
 
   <style>
     body { display: flex; flex-direction: column; height: 100dvh; margin: 0; overflow: hidden; background-color: #f8fafc; font-family: system-ui, sans-serif; overscroll-behavior-y: none; }
@@ -28,7 +29,6 @@
       <span class="text-[10px] text-indigo-100" id="room-display">טוען חדר...</span>
     </div>
     <div class="flex items-center gap-2">
-      <!-- כפתורי הניהול שמופיעים רק לאחר הזנת סיסמה מוצלחת -->
       <div id="admin-controls" class="flex items-center gap-1.5 bg-indigo-900/40 p-1 rounded-lg border border-white/20 hidden">
         <button onclick="copyCurrentRoomLink()" class="text-xs px-2 py-1.5 bg-indigo-600 rounded btn-action">קישור</button>
         <button onclick="openRoomsManager()" class="text-xs px-2 py-1.5 bg-amber-600 rounded btn-action">חדרים</button>
@@ -83,7 +83,6 @@
     let adminTimer;
     const titleEl = document.getElementById('app-title');
     
-    // לחיצה ארוכה על הכותרת מפעילה מיד את בקשת הסיסמה
     const startTimer = () => { 
       adminTimer = setTimeout(() => { 
         requestAdminAccess();
@@ -99,7 +98,6 @@
       if (!p) return;
       cachedAdminPassword = p;
       try {
-        // בדיקת תקינות מול השרת ע"י שליפת רשימת החדרים
         const rooms = await callApi('getRoomsList');
         document.getElementById('admin-controls').classList.remove('hidden');
         renderRoomsList(rooms);
@@ -129,20 +127,39 @@
       } catch (e) { console.error(e); }
     }
 
+    // פונקציית renderChat מותאמת למניעת Forced Reflow / Layout Thrashing
     function renderChat() {
       const box = document.getElementById('chat-box');
-      if (!localHistory?.length) { box.innerHTML = '<div class="text-center text-slate-400 mt-20 italic">אין הודעות.</div>'; return; }
+      
+      // 1. קריאת מידות ה-DOM קודם (מבלי לכתוב קודם ל-DOM)
       const shouldScroll = box.scrollHeight - box.scrollTop <= box.clientHeight + 150;
-      box.innerHTML = localHistory.map(m => {
+
+      if (!localHistory?.length) { 
+        box.innerHTML = '<div class="text-center text-slate-400 mt-20 italic">אין הודעות.</div>'; 
+        return; 
+      }
+
+      // 2. בניית האלמנטים בזיכרון (Fragment)
+      const fragment = document.createDocumentFragment();
+      localHistory.forEach(m => {
         const isMe = m.clientId === currentClientId;
-        return `<div class="chat-message-wrapper ${isMe ? 'items-end' : 'items-start'}">
-            <div class="chat-bubble ${isMe ? 'bg-indigo-600 text-white' : 'bg-white text-slate-800 border border-slate-200'}">
-              <div class="text-[9px] opacity-70 mb-1 flex justify-between gap-4"><span>${isMe ? 'אני' : 'משתתף'}</span><span>${m.time}</span></div>
-              <div class="text-sm">${escapeHtml(m.original)}</div>
-              <div class="mt-2 pt-2 border-t ${isMe ? 'border-indigo-400/40 text-indigo-50' : 'border-slate-100 text-indigo-700'} font-semibold text-sm italic">${escapeHtml(m.translated)}</div>
-            </div></div>`;
-      }).join('');
-      if (shouldScroll) box.scrollTop = box.scrollHeight;
+        const wrapper = document.createElement('div');
+        wrapper.className = `chat-message-wrapper ${isMe ? 'items-end' : 'items-start'}`;
+        wrapper.innerHTML = `
+          <div class="chat-bubble ${isMe ? 'bg-indigo-600 text-white' : 'bg-white text-slate-800 border border-slate-200'}">
+            <div class="text-[9px] opacity-70 mb-1 flex justify-between gap-4"><span>${isMe ? 'אני' : 'משתתף'}</span><span>${m.time}</span></div>
+            <div class="text-sm">${escapeHtml(m.original)}</div>
+            <div class="mt-2 pt-2 border-t ${isMe ? 'border-indigo-400/40 text-indigo-50' : 'border-slate-100 text-indigo-700'} font-semibold text-sm italic">${escapeHtml(m.translated)}</div>
+          </div>`;
+        fragment.appendChild(wrapper);
+      });
+
+      // 3. עדכון יחיד של ה-DOM בעזרת requestAnimationFrame למניעת עומס חישוב (Layout)
+      requestAnimationFrame(() => {
+        box.innerHTML = '';
+        box.appendChild(fragment);
+        if (shouldScroll) box.scrollTop = box.scrollHeight;
+      });
     }
 
     async function sendMessage() {
@@ -199,7 +216,7 @@
     window.onload = () => {
         document.getElementById('message-input').focus();
         fetchHistory(); 
-        setInterval(fetchHistory, 2000);
+        setInterval(fetchHistory, 2500);
     };
   </script>
 </body>
