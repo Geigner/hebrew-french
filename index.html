@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>גשר שפות עברית צרפתית - חדר שיחה רגעי</title>
+    <title>גשר שפות עברית צרפתית - חדר שיחה</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -45,18 +45,6 @@
         header h1 {
             margin: 0;
             font-size: 1.25rem;
-        }
-        .admin-btn {
-            background-color: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        .admin-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
         }
         #chat-window {
             height: 450px;
@@ -155,17 +143,16 @@
 
     <div class="container">
         <header>
-            <h1>🇫🇷 גשר שפות עברית צרפתית - חדר שיחה רגעי</h1>
-            <button class="admin-btn" onclick="openAdminPanel()">ניהול</button>
+            <h1>🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
         </header>
 
         <div id="chat-window">
-            <!-- כאן יופיעו ההודעות בזמן אמת -->
+            <!-- הודעות בזמן אמת -->
         </div>
 
         <div class="input-area">
             <div class="controls-row">
-                <span>שפת ההקשרה שלי: <strong>🇮🇱 עברית / 🇫🇷 FR Français</strong></span>
+                <span>תרגום אוטומטי: <strong>🇮🇱 עברית ⇄ 🇫🇷 FR</strong></span>
                 <span id="room-indicator">חדר: כללי</span>
             </div>
             <div class="input-row">
@@ -174,16 +161,14 @@
             </div>
         </div>
         <footer>
-            היחידה לקידום נוער נוף הגליל | תוכנית היל"ה | פיתוח וניהול פדגוגי
+            היחידה לקידום נוער נוף הגליל | תוכנית היל"ה
         </footer>
     </div>
 
-    <!-- Firebase SDKs (Modular) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Firebase Configuration for hebrew-french
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
             authDomain: "hebrew-french.firebaseapp.com",
@@ -193,16 +178,13 @@
             appId: "1:1027136444686:web:e02cc664abd4c1fc8adf5f"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Get Room ID from URL parameters or default to "general"
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room') || 'general';
         document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
-        // Listen to Messages in Realtime
         const messagesRef = collection(db, "rooms", roomId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
@@ -212,8 +194,6 @@
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 const msgDiv = document.createElement('div');
-                
-                // Determine layout based on language or source
                 const isHebrew = data.originalLang === 'he';
                 msgDiv.className = `message ${isHebrew ? 'hebrew' : 'french'}`;
                 
@@ -227,13 +207,11 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Send Message Function with MyMemory API Translation (Hebrew <-> French)
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text) return;
 
-            // Detect if text contains Hebrew characters
             const isHebrew = /[\u0590-\u05FF]/.test(text);
             const langPair = isHebrew ? 'he|fr' : 'fr|he';
 
@@ -266,13 +244,6 @@
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
-            }
-        };
-
-        window.openAdminPanel = function() {
-            const newRoom = prompt("הכנס שם לחדר חדש או קוד זיהוי:", "room-" + Math.floor(Math.random()*1000));
-            if (newRoom) {
-                window.location.href = `?room=${encodeURIComponent(newRoom)}`;
             }
         };
 
