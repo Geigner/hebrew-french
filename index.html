@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>גשר שפות עברית צרפתית - חדר שיחה</title>
+    <title>גשר שפות עברית צרפתית - שיחה</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -129,6 +129,10 @@
         button.send-btn:hover {
             background-color: #1d4ed8;
         }
+        button.send-btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
         footer {
             text-align: center;
             font-size: 0.75rem;
@@ -157,7 +161,7 @@
             </div>
             <div class="input-row">
                 <textarea id="message-input" placeholder="הקלד משפט בעברית או צרפתית..." onkeydown="checkEnter(event)"></textarea>
-                <button class="send-btn" onclick="sendMessage()">שלח 🚀</button>
+                <button id="send-btn-element" class="send-btn" onclick="sendMessage()">שלח 🚀</button>
             </div>
         </div>
         <footer>
@@ -209,8 +213,14 @@
 
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn-element');
             const text = input.value.trim();
             if (!text) return;
+
+            // ניקוי המקלדת והשבתת הכפתור מיד לתחושת מהירות וחיווי
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.innerText = 'שולח...';
 
             const isHebrew = /[\u0590-\u05FF]/.test(text);
             const langPair = isHebrew ? 'he|fr' : 'fr|he';
@@ -234,9 +244,13 @@
                     originalLang: isHebrew ? 'he' : 'fr',
                     timestamp: serverTimestamp()
                 });
-                input.value = '';
             } catch (e) {
                 console.error("Error adding message: ", e);
+            } finally {
+                // החזרת הכפתור למצב רגיל
+                sendBtn.disabled = false;
+                sendBtn.innerText = 'שלח 🚀';
+                input.focus();
             }
         };
 
@@ -252,7 +266,7 @@
         }
 
         function formatTime(timestamp) {
-            if (!timestamp) return 'מעדכן...';
+            if (!timestamp) return 'הרגע...';
             const date = timestamp.toDate();
             return date.toLocaleDateString('he-IL') + ' ' + date.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
         }
