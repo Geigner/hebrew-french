@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול - גשר שפות עברית צרפתית</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .admin-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 { color: #1e3a8a; margin-top: 0; }
+        .hidden { display: none; }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1e3a8a;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #1d4ed8; }
+        .room-link-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
 
+    <!-- מסך הזנת סיסמה -->
+    <div id="login-screen" class="admin-card">
+        <h2>🔐 כניסת מנהל מערכת</h2>
+        <p>הכנס סיסמת ניהול כדי לגשת למערכת:</p>
+        <input type="password" id="password-input" placeholder="סיסמה (ברירת מחדל: 1234)">
+        <button onclick="checkPassword()">הכנס</button>
+    </div>
+
+    <!-- לוח הניהול שמוצג לאחר סיסמה נכונה -->
+    <div id="dashboard" class="admin-card hidden">
+        <h2>🛠️ לוח בקרה - יצירת חדרים</h2>
+        <p>צור חדר שיחה חדש וקבל קישור ישיר לשיתוף עם המשתתפים:</p>
+        <input type="text" id="room-name-input" placeholder="שם החדר (למשל: group-a)">
+        <button onclick="createRoomLink()">צור קישור לחדר</button>
+        
+        <div id="result-area" class="hidden">
+            <p style="margin-top: 20px; font-weight: bold; text-align: right;">קישור מוכן לשיתוף:</p>
+            <div id="generated-link" class="room-link-box"></div>
+            <button style="background-color: #10b981; margin-top: 10px;" onclick="copyLink()">העתק קישור 📋</button>
+        </div>
+    </div>
+
+    <script>
+        // ** כאן תוכל לשנות את הסיסמה למה שתרצה **
+        const ADMIN_PASSWORD = "1234";
+
+        function checkPassword() {
+            const pass = document.getElementById('password-input').value;
+            if (pass === ADMIN_PASSWORD) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+            } else {
+                alert("סיסמה שגויה!");
+            }
+        }
+
+        function createRoomLink() {
+            const roomName = document.getElementById('room-name-input').value.trim();
+            if (!roomName) {
+                alert("אנא הכנס שם תקין לחדר");
+                return;
+            }
+            
+            // יוצר את הקישור אוטומטית לפי כתובת האתר הנוכחית
+            const baseUrl = window.location.href.replace('admin.html', 'index.html');
+            const fullLink = `${baseUrl}?room=${encodeURIComponent(roomName)}`;
+
+            document.getElementById('generated-link').innerText = fullLink;
+            document.getElementById('result-area').classList.remove('hidden');
+        }
+
+        function copyLink() {
+            const linkText = document.getElementById('generated-link').innerText;
+            navigator.clipboard.writeText(linkText).then(() => {
+                alert("הקישור הועתק בהצלחה!");
+            });
+        }
+    </script>
+</body>
+</html>
