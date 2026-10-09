@@ -17,11 +17,12 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 10px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            min-height: 100dvh;
             box-sizing: border-box;
         }
         .container {
@@ -30,6 +31,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            padding: 20px 10px;
+            box-sizing: border-box;
         }
         .card {
             background: var(--card-bg);
@@ -113,17 +116,29 @@
         .btn-danger { background-color: #ef4444; }
         .btn-danger:hover { background-color: #dc2626; }
 
+        /* התאמת ממשק הצ'אט למסך מלא אמצעי במובייל ובדסקטופ */
         #chat-interface {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid #e2e8f0;
             width: 100%;
             max-width: 800px;
-            height: 92vh; /* התאמה גמישה לגובה המסך בנייד */
+            height: 100vh;
+            height: 100dvh;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        @media (min-width: 768px) {
+            #chat-interface {
+                height: 90vh;
+                max-height: 850px;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                border: 1px solid #e2e8f0;
+                margin: auto;
+            }
         }
         header.chat-header {
             background-color: var(--primary-color);
@@ -146,7 +161,7 @@
             flex-direction: column;
             gap: 12px;
             background-color: #f1f5f9;
-            -webkit-overflow-scrolling: touch; /* גלילה חלקה באייפון */
+            -webkit-overflow-scrolling: touch;
         }
         .message {
             max-width: 80%;
@@ -379,10 +394,9 @@
                     chatWindow.appendChild(msgDiv);
                 });
                 
-                // גלילה מודרגת שמבטיחה שההודעה האחרונה תמיד למטה גם אחרי פתיחת מקלדת
                 setTimeout(() => {
                     chatWindow.scrollTop = chatWindow.scrollHeight;
-                }, 150);
+                }, 100);
             });
 
             window.sendMessage = async function() {
