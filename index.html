@@ -116,7 +116,6 @@
         .btn-danger { background-color: #ef4444; }
         .btn-danger:hover { background-color: #dc2626; }
 
-        /* התאמת ממשק הצ'אט למסך מלא אמצעי במובייל ובדסקטופ */
         #chat-interface {
             background: var(--card-bg);
             display: flex;
@@ -436,7 +435,7 @@
                 } finally {
                     sendBtn.disabled = false;
                     sendBtn.innerText = '🚀';
-                    input.focus();
+                    // שים לב: הסרנו מכאן את input.focus() כדי שהמקלדת לא תיפתח לבד
                     setTimeout(() => {
                         chatWindow.scrollTop = chatWindow.scrollHeight;
                     }, 100);
