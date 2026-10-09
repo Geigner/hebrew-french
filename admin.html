@@ -166,7 +166,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
@@ -180,7 +180,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const ADMIN_PASSWORD = "1234"; // ניתן לשנות סיסמה כאן
+        const ADMIN_PASSWORD = "1234";
 
         window.checkPassword = function() {
             const pass = document.getElementById('password-input').value;
@@ -193,21 +193,33 @@
             }
         }
 
-        window.createRoomLink = function() {
+        // יצירת חדר חדש שכותב פיזית מסמך ב-Firestore
+        window.createRoomLink = async function() {
             const roomName = document.getElementById('room-name-input').value.trim();
             if (!roomName) {
                 alert("אנא הכנס שם תקין לחדר");
                 return;
             }
             
-            // יצירת קישור מדויק המצביע תמיד על index.html בבסיס האתר
-            const currentUrl = window.location.href;
-            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1) + 'index.html';
-            const fullLink = `${baseUrl}?room=${encodeURIComponent(roomName)}`;
+            try {
+                // כותב מסמך אמיתי תחת אוסף rooms כדי שייחשב כקיים ב-queries
+                const roomDocRef = doc(db, "rooms", roomName);
+                await setDoc(roomDocRef, { 
+                    createdAt: serverTimestamp(),
+                    roomName: roomName 
+                }, { merge: true });
 
-            document.getElementById('generated-link').innerText = fullLink;
-            document.getElementById('result-area').classList.remove('hidden');
-            loadActiveRooms();
+                const currentUrl = window.location.href;
+                const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1) + 'index.html';
+                const fullLink = `${baseUrl}?room=${encodeURIComponent(roomName)}`;
+
+                document.getElementById('generated-link').innerText = fullLink;
+                document.getElementById('result-area').classList.remove('hidden');
+                loadActiveRooms();
+            } catch (e) {
+                console.error("Error creating room:", e);
+                alert("שגיאה ביצירת החדר בענן.");
+            }
         }
 
         window.copyLink = function() {
