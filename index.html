@@ -152,6 +152,15 @@
             margin: 0;
             font-size: 1.05rem;
         }
+        .connection-status {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         #chat-window {
             flex: 1;
             overflow-y: auto;
@@ -337,6 +346,7 @@
     <main id="chat-interface" class="hidden">
         <header class="chat-header">
             <h1 id="chat-main-title">🇮🇱 גשר שפות עברית ⇄ 🇫🇷 צרפתית</h1>
+            <div id="connection-badge" class="connection-status">🟡 מתחבר...</div>
         </header>
 
         <div id="chat-window"></div>
@@ -383,7 +393,6 @@
             document.getElementById('chat-interface').classList.remove('hidden');
             document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
-            // בדיקה האם יש כבר שם משתמש שמור בדפדפן
             let userName = localStorage.getItem('bridge_chat_username');
             if (!userName) {
                 userName = prompt("הכנס את שמך להצטרפות לשיחה:") || "משתמש/ת";
@@ -393,9 +402,11 @@
 
             const chatWindow = document.getElementById('chat-window');
             const inputAreaBox = document.getElementById('input-area-box');
+            const connectionBadge = document.getElementById('connection-badge');
             const roomDocRef = doc(db, "rooms", roomId);
 
             onSnapshot(roomDocRef, (docSnap) => {
+                connectionBadge.innerHTML = '🟢 מחובר לענן';
                 if (!docSnap.exists()) {
                     chatWindow.innerHTML = `
                         <div class="closed-notice">
@@ -405,6 +416,9 @@
                     `;
                     inputAreaBox.style.display = 'none';
                 }
+            }, (error) => {
+                console.error("Connection error:", error);
+                connectionBadge.innerHTML = '🔴 בעיית חיבור';
             });
 
             const messagesRef = collection(db, "rooms", roomId, "messages");
@@ -565,7 +579,7 @@
                     const roomsSnapshot = await getDocs(collection(db, "rooms"));
                     container.innerHTML = '';
 
-                    if (roomsSnapshot.empty)  {
+                    if (roomsSnapshot.empty) {
                         container.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">אין עדיין חדרים פעילים במסד הנתונים. צור חדר ראשון למעלה!</p>';
                         return;
                     }
