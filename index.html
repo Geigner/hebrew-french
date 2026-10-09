@@ -143,6 +143,18 @@
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
         }
+        .closed-notice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #ef4444;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -156,7 +168,7 @@
             <!-- הודעות בזמן אמת -->
         </div>
 
-        <div class="input-area">
+        <div class="input-area" id="input-area-box">
             <div class="controls-row">
                 <span>תרגום אוטומטי: <strong>🇮🇱 עברית ⇄ 🇫🇷 FR</strong></span>
                 <span id="room-indicator">חדר: כללי</span>
@@ -173,7 +185,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
@@ -191,11 +203,38 @@
         const roomId = urlParams.get('room') || 'general';
         document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
+        const chatWindow = document.getElementById('chat-window');
+        const inputAreaBox = document.getElementById('input-area-box');
+
+        // בדיקה ומעקב בזמן אמת האם חדר זה קיים או נמחק על ידי המנהל
+        const roomDocRef = doc(db, "rooms", roomId);
+        
+        onSnapshot(roomDocRef, (docSnap) => {
+            // אם זה לא חדר ברירת מחדל (general) והמסמך הראשי נמחק מהענן
+            if (roomId !== 'general' && !docSnap.exists()) {
+                chatWindow.innerHTML = `
+                    <div class="closed-notice">
+                        <span>❌ חדר שיחה זה נסגר או נמחק על ידי מנהל המערכת.</span>
+                        <span style="font-size: 0.85rem; color: #64748b;">לא ניתן להמשיך לשוחח בחדר זה.</span>
+                    </div>
+                `;
+                inputAreaBox.style.display = 'none'; // הסתרת תיבת ההקלדה לצמיתות
+                return;
+            }
+        });
+
+        // האזנה להודעות בחדר
         const messagesRef = collection(db, "rooms", roomId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"));
 
         onSnapshot(q, (snapshot) => {
-            const chatWindow = document.getElementById('chat-window');
+            // אם החדר כבר זוהה כסגור, לא נציג הודעות
+            if (roomId !== 'general') {
+                getDoc(roomDocRef).then((snap) => {
+                    if (!snap.exists()) return;
+                });
+            }
+
             chatWindow.innerHTML = '';
             snapshot.forEach((doc) => {
                 const data = doc.data();
@@ -228,9 +267,8 @@
 
             let translatedText = "שגיאת תרגום";
             try {
-                const response = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
-                const res = await fetch(response);
-                const data = await res.json();
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
+                const data = await response.json();
                 if (data && data.responseData) {
                     translatedText = data.responseData.translatedText;
                 }
