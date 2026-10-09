@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>גשר שפות עברית צרפתית - ניהול מערכת</title>
+    <title>גשר שפות עברית 🇮🇱 ⇄ 🇫🇷 צרפתית - ניהול מערכת</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -105,6 +105,8 @@
         .btn-success:hover { background-color: #059669; }
         .btn-whatsapp { background-color: #25d366; }
         .btn-whatsapp:hover { background-color: #1ebe5d; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-warning:hover { background-color: #d97706; }
         .btn-danger { background-color: #ef4444; }
         .btn-danger:hover { background-color: #dc2626; }
 
@@ -205,12 +207,13 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 0 20px;
+            padding: 0 16px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
             width: auto;
             margin-top: 0;
+            font-size: 1.25rem;
         }
         button.send-btn:hover { background-color: #1d4ed8; }
         button.send-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
@@ -250,7 +253,7 @@
         </div>
 
         <div id="dashboard" class="card hidden">
-            <h2>🛠️ לוח בקרה - ניהול חדרי שיחה</h2>
+            <h2>🛠️ לוח בקרה - ניהול חדרי שיחה (🇮🇱 ⇄ 🇫🇷)</h2>
             <p>צור חדר שיחה חדש, שתף לוואטסאפ או נהל את החדרים הפעילים:</p>
             
             <div style="margin-top: 20px;">
@@ -288,7 +291,7 @@
 
     <main id="chat-interface" class="hidden">
         <header class="chat-header">
-            <h1 id="chat-main-title">🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
+            <h1 id="chat-main-title">🇮🇱 גשר שפות עברית ⇄ 🇫🇷 צרפתית - שיחה</h1>
         </header>
 
         <div id="chat-window"></div>
@@ -299,8 +302,8 @@
                 <span id="room-indicator">חדר: כללי</span>
             </div>
             <div class="input-row">
-                <textarea id="message-input" placeholder="הקלד משפט בעברית או צרפתית..." onkeydown="checkEnter(event)"></textarea>
-                <button id="send-btn-element" class="send-btn" onclick="sendMessage()">שלח 🚀</button>
+                <textarea id="message-input" placeholder="הקלד משפט בעברית או בצרפתית... / Tapez ici..." onkeydown="checkEnter(event)"></textarea>
+                <button id="send-btn-element" class="send-btn" onclick="sendMessage()" title="שלח / Envoyer">🚀</button>
             </div>
         </div>
         
@@ -312,7 +315,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDocs, getDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
@@ -363,7 +366,7 @@
                     msgDiv.className = `message ${isHebrew ? 'hebrew' : 'french'}`;
                     
                     msgDiv.innerHTML = `
-                        <div><strong>${isHebrew ? 'IL' : 'FR'}</strong> ${escapeHtml(data.originalText)}</div>
+                        <div><strong>${isHebrew ? '🇮🇱 IL' : '🇫🇷 FR'}</strong> ${escapeHtml(data.originalText)}</div>
                         <div style="margin-top: 4px; opacity: 0.85;">${escapeHtml(data.translatedText)}</div>
                         <span class="meta">${formatTime(data.timestamp)}</span>
                     `;
@@ -380,7 +383,7 @@
 
                 input.value = '';
                 sendBtn.disabled = true;
-                sendBtn.innerText = 'שולח...';
+                sendBtn.innerText = '⏳';
 
                 const isHebrew = /[\u0590-\u05FF]/.test(text);
                 const langPair = isHebrew ? 'he|fr' : 'fr|he';
@@ -408,7 +411,7 @@
                     console.error("Error adding message: ", e);
                 } finally {
                     sendBtn.disabled = false;
-                    sendBtn.innerText = 'שלח 🚀';
+                    sendBtn.innerText = '🚀';
                     input.focus();
                 }
             };
@@ -501,6 +504,7 @@
                                 <button onclick="window.open('${roomUrl}', '_blank')">הכנס 👁️</button>
                                 <button class="btn-success" onclick="navigator.clipboard.writeText('${roomUrl}').then(() => alert('הקישור הועתק!'))">העתק 📋</button>
                                 <button class="btn-whatsapp" onclick="window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent('הצטרפו לחדר השיחה: ${roomUrl}'), '_blank')">ואטסאפ 📱</button>
+                                <button class="btn-warning" onclick="resetRoomMessages('${roomDocId}')">איפוס 🔄</button>
                                 <button class="btn-danger" onclick="deleteRoom('${roomDocId}')">מחק 🗑️</button>
                             </div>
                         `;
@@ -509,6 +513,26 @@
                 } catch (e) {
                     console.error("Error loading rooms:", e);
                     container.innerHTML = '<p style="color: #ef4444; font-size: 0.9rem;">שגיאה בטעינת החדרים מהענן.</p>';
+                }
+            };
+
+            window.resetRoomMessages = async function(roomDocId) {
+                if (confirm(`האם אתה בטוח שברצונך לאפס את השיחה בחדר "${roomDocId}"? כל ההודעות הקודמות יימחקו, אך הקישור יישאר פעיל.`)) {
+                    try {
+                        const messagesRef = collection(db, "rooms", roomDocId, "messages");
+                        const snapshot = await getDocs(messagesRef);
+                        
+                        const batch = writeBatch(db);
+                        snapshot.forEach((docSnap) => {
+                            batch.delete(docSnap.ref);
+                        });
+                        
+                        await batch.commit();
+                        alert("השיחה אופסה בהצלחה!");
+                    } catch (e) {
+                        console.error("Error resetting room messages:", e);
+                        alert("שגיאה באיפוס השיחה.");
+                    }
                 }
             };
 
