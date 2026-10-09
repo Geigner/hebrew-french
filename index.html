@@ -232,7 +232,7 @@
 <body>
 
     <!-- אזור הניהול -->
-    <div id="admin-container" class="container hidden">
+    <main id="admin-container" class="container hidden">
         <div id="login-screen" class="card" style="text-align: center;">
             <h2>🔐 כניסת מנהל מערכת</h2>
             <p>הכנס סיסמת ניהול כדי לגשת לדאשבורד:</p>
@@ -270,10 +270,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- ממשק הצ'אט לתלמידים -->
-    <div id="chat-interface" class="hidden">
+    <main id="chat-interface" class="hidden">
         <header class="chat-header">
             <h1 id="chat-main-title">🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
         </header>
@@ -295,12 +295,12 @@
         <footer style="text-align: center; font-size: 0.75rem; color: #64748b; padding: 10px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
             היחידה לקידום נוער נוף הגליל | תוכנית היל"ה
         </footer>
-    </div>
+    </main>
 
     <!-- Firebase SDKs והלוגיקה הראשית -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
