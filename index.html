@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>גשר שפות עברית צרפתית - שיחה</title>
+    <title>גשר שפות עברית צרפתית - חדר שיחה</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -45,6 +45,8 @@
         header h1 {
             margin: 0;
             font-size: 1.25rem;
+            cursor: pointer; /* נותן תחושה עדינה שאפשר ללחוץ, או להשאיר רגיל */
+            user-select: none;
         }
         #chat-window {
             height: 450px;
@@ -147,7 +149,8 @@
 
     <div class="container">
         <header>
-            <h1>🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
+            <!-- הוספנו מזהה לכותרת כדי לזהות את הלחיצה הארוכה -->
+            <h1 id="main-title">🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
         </header>
 
         <div id="chat-window">
@@ -217,7 +220,6 @@
             const text = input.value.trim();
             if (!text) return;
 
-            // ניקוי המקלדת והשבתת הכפתור מיד לתחושת מהירות וחיווי
             input.value = '';
             sendBtn.disabled = true;
             sendBtn.innerText = 'שולח...';
@@ -247,7 +249,6 @@
             } catch (e) {
                 console.error("Error adding message: ", e);
             } finally {
-                // החזרת הכפתור למצב רגיל
                 sendBtn.disabled = false;
                 sendBtn.innerText = 'שלח 🚀';
                 input.focus();
@@ -258,6 +259,42 @@
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
+            }
+        };
+
+        // --- מנגנון לחיצה ארוכה סודי על הכותרת (1.5 שניות) ---
+        let pressTimer = null;
+        const titleElement = document.getElementById('main-title');
+
+        function startLongPress(e) {
+            // מונע בחירת טקסט בטעות בזמן לחיצה ארוכה
+            e.preventDefault(); 
+            pressTimer = setTimeout(() => {
+                openAdminPortal();
+            }, 1500); // 1.5 שניות
+        }
+
+        function cancelLongPress() {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        }
+
+        // תמיכה בעכבר במחשב ובמגע בטלפון/טאבלט
+        titleElement.addEventListener('mousedown', startLongPress);
+        titleElement.addEventListener('mouseup', cancelLongPress);
+        titleElement.addEventListener('mouseleave', cancelLongPress);
+
+        titleElement.addEventListener('touchstart', startLongPress);
+        titleElement.addEventListener('touchend', cancelLongPress);
+
+        window.openAdminPortal = function() {
+            const pass = prompt("הכנס סיסמת מנהל:");
+            if (pass === "1234") {
+                window.location.href = "admin.html";
+            } else if (pass !== null) {
+                alert("סיסמה שגויה!");
             }
         };
 
