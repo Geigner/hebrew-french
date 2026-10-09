@@ -38,7 +38,7 @@
             border: 1px solid #e2e8f0;
         }
         h2, h3 { color: var(--primary-color); margin-top: 0; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         input, button {
             width: 100%;
             padding: 12px;
@@ -108,7 +108,7 @@
         .btn-danger { background-color: #ef4444; }
         .btn-danger:hover { background-color: #dc2626; }
 
-        /* סגנונות עבור מסך הצ'אט (כאשר נכנסים בקישור חדר) */
+        /* סגנונות עבור ממשק הצ'אט */
         #chat-interface {
             background: var(--card-bg);
             border-radius: 12px;
@@ -231,9 +231,8 @@
 </head>
 <body>
 
-    <!-- אזור הניהול (מוצג כברירת מחדל אם אין פרמטר room) -->
+    <!-- אזור הניהול -->
     <div id="admin-container" class="container hidden">
-        <!-- מסך הזנת סיסמה -->
         <div id="login-screen" class="card" style="text-align: center;">
             <h2>🔐 כניסת מנהל מערכת</h2>
             <p>הכנס סיסמת ניהול כדי לגשת לדאשבורד:</p>
@@ -241,7 +240,6 @@
             <button onclick="checkPassword()">הכנס למערכת</button>
         </div>
 
-        <!-- דאשבורד ניהול מלא -->
         <div id="dashboard" class="card hidden">
             <h2>🛠️ לוח בקרה - ניהול חדרי שיחה</h2>
             <p>צור חדר שיחה חדש, שתף לוואטסאפ או נהל את החדרים הפעילים:</p>
@@ -274,7 +272,7 @@
         </div>
     </div>
 
-    <!-- ממשק הצ'אט לתלמידים (מוצג רק כאשר נכנסים עם ?room=...) -->
+    <!-- ממשק הצ'אט לתלמידים -->
     <div id="chat-interface" class="hidden">
         <header class="chat-header">
             <h1 id="chat-main-title">🇫🇷 גשר שפות עברית צרפתית - שיחה</h1>
@@ -302,7 +300,7 @@
     <!-- Firebase SDKs והלוגיקה הראשית -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
@@ -320,9 +318,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room');
 
-        // זיהוי האם המשתמש נכנס כצ'אט (עם room) או כמנהל (בלי room)
         if (roomId) {
-            // מצב תלמיד - הצג ממשק צ'אט
+            // מצב תלמיד - הצג רק צ'אט והסתר לחלוטין את הניהול
+            document.getElementById('admin-container').classList.add('hidden');
             document.getElementById('chat-interface').classList.remove('hidden');
             document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
@@ -330,7 +328,6 @@
             const inputAreaBox = document.getElementById('input-area-box');
             const roomDocRef = doc(db, "rooms", roomId);
 
-            // בדיקה בזמן אמת האם החדר נמחק על ידי המנהל
             onSnapshot(roomDocRef, (docSnap) => {
                 if (!docSnap.exists()) {
                     chatWindow.innerHTML = `
@@ -343,7 +340,6 @@
                 }
             });
 
-            // האזנה להודעות
             const messagesRef = collection(db, "rooms", roomId, "messages");
             const q = query(messagesRef, orderBy("timestamp", "asc"));
 
@@ -414,7 +410,8 @@
             };
 
         } else {
-            // מצב מנהל - הצג ממשק ניהול
+            // מצב מנהל - הצג רק את מסך הניהול והסתר את הצ'אט
+            document.getElementById('chat-interface').classList.add('hidden');
             document.getElementById('admin-container').classList.remove('hidden');
 
             window.checkPassword = function() {
@@ -520,7 +517,7 @@
         }
 
         function escapeHtml(string) {
-            return String(string).replace(/&/g, '&amp;').print ? string : String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
         function formatTime(timestamp) {
