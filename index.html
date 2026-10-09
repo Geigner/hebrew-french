@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>גשר שפות עברית 🇮🇱 ⇄ 🇫🇷 צרפתית - ניהול מערכת</title>
     <style>
         :root {
@@ -17,11 +17,12 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px 10px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
         .container {
             width: 100%;
@@ -122,28 +123,30 @@
             border: 1px solid #e2e8f0;
             width: 100%;
             max-width: 800px;
+            height: 92vh; /* התאמה גמישה לגובה המסך בנייד */
         }
         header.chat-header {
             background-color: var(--primary-color);
             color: white;
-            padding: 16px 20px;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         header.chat-header h1 {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
         #chat-window {
-            height: 420px;
+            flex: 1;
             overflow-y: auto;
             padding: 15px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             background-color: #f1f5f9;
-            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; /* גלילה חלקה באייפון */
         }
         .message {
             max-width: 80%;
@@ -173,12 +176,13 @@
             display: block;
         }
         .input-area {
-            padding: 12px 15px;
+            padding: 10px 15px;
             background: white;
             border-top: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 0;
         }
         .controls-row {
             display: flex;
@@ -193,11 +197,11 @@
         }
         textarea {
             flex: 1;
-            padding: 10px 14px;
+            padding: 10px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             resize: none;
-            height: 45px;
+            height: 42px;
             font-family: inherit;
             font-size: 1rem;
         }
@@ -234,14 +238,13 @@
         }
         .site-footer {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #64748b;
-            padding: 10px;
+            padding: 8px;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
-            line-height: 1.4;
-            margin-top: 15px;
-            border-radius: 0 0 12px 12px;
+            line-height: 1.3;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -318,7 +321,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDocs, getDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDocs, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq_hHRhuFu6QfvxdkrN_S0rK17hZskIfo",
@@ -376,10 +379,10 @@
                     chatWindow.appendChild(msgDiv);
                 });
                 
-                // גלילה חלקה לתחתית חלון השיחה בכל עדכון
+                // גלילה מודרגת שמבטיחה שההודעה האחרונה תמיד למטה גם אחרי פתיחת מקלדת
                 setTimeout(() => {
                     chatWindow.scrollTop = chatWindow.scrollHeight;
-                }, 50);
+                }, 150);
             });
 
             window.sendMessage = async function() {
@@ -420,8 +423,9 @@
                     sendBtn.disabled = false;
                     sendBtn.innerText = '🚀';
                     input.focus();
-                    // וידוא גלילה מיידית לתחתית אחרי שליחה
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    setTimeout(() => {
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }, 100);
                 }
             };
 
