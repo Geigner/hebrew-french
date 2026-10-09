@@ -164,7 +164,7 @@
         }
         .message {
             max-width: 85%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 12px;
             font-size: 0.95rem;
             line-height: 1.5;
@@ -182,6 +182,13 @@
             border-left: 5px solid var(--primary-color);
             direction: ltr;
             text-align: left;
+        }
+        .author-tag {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+            display: block;
         }
         .message .msg-content {
             display: flex;
@@ -376,6 +383,14 @@
             document.getElementById('chat-interface').classList.remove('hidden');
             document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
+            // בדיקה האם יש כבר שם משתמש שמור בדפדפן
+            let userName = localStorage.getItem('bridge_chat_username');
+            if (!userName) {
+                userName = prompt("הכנס את שמך להצטרפות לשיחה:") || "משתמש/ת";
+                userName = userName.trim();
+                localStorage.setItem('bridge_chat_username', userName);
+            }
+
             const chatWindow = document.getElementById('chat-window');
             const inputAreaBox = document.getElementById('input-area-box');
             const roomDocRef = doc(db, "rooms", roomId);
@@ -403,15 +418,16 @@
                     const isHebrew = data.originalLang === 'he';
                     msgDiv.className = `message ${isHebrew ? 'hebrew' : 'french'}`;
                     
-                    // טקסט להשמעה (נעדיף להשמיע את התרגום או המקור לפי בחירה)
                     const textToSpeak = isHebrew ? data.translatedText : data.originalText;
                     const speakLang = isHebrew ? 'fr-FR' : 'he-IL';
+                    const author = data.author || "אורח/ת";
 
                     msgDiv.innerHTML = `
+                        <span class="author-tag">👤 ${escapeHtml(author)} (${isHebrew ? '🇮🇱 IL' : '🇫🇷 FR'})</span>
                         <div class="msg-content">
                             <div>
-                                <strong>${isHebrew ? '🇮🇱 IL' : '🇫🇷 FR'}</strong> ${escapeHtml(data.originalText)}
-                                <div style="margin-top: 4px; opacity: 0.85;">${escapeHtml(data.translatedText)}</div>
+                                <div>${escapeHtml(data.originalText)}</div>
+                                <div style="margin-top: 4px; opacity: 0.85; font-weight: 500;">${escapeHtml(data.translatedText)}</div>
                             </div>
                             <button class="speak-btn" onclick="speakText('${escapeHtml(textToSpeak).replace(/'/g, "\\'")}', '${speakLang}')" title="השמע 🔊">🔊</button>
                         </div>
@@ -427,10 +443,10 @@
 
             window.speakText = function(text, lang) {
                 if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel(); // עצור דיבור קודם אם יש
+                    window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = lang;
-                    utterance.rate = 0.9; // קצב איטי ונוח ללמידה
+                    utterance.rate = 0.9;
                     window.speechSynthesis.speak(utterance);
                 } else {
                     alert("דפדפן זה אינו תומך בהקראה קולית.");
@@ -467,6 +483,7 @@
                         originalText: text,
                         translatedText: translatedText,
                         originalLang: isHebrew ? 'he' : 'fr',
+                        author: userName,
                         timestamp: serverTimestamp()
                     });
                 } catch (e) {
@@ -548,7 +565,7 @@
                     const roomsSnapshot = await getDocs(collection(db, "rooms"));
                     container.innerHTML = '';
 
-                    if (roomsSnapshot.empty) {
+                    if (roomsSnapshot.empty)  {
                         container.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">אין עדיין חדרים פעילים במסד הנתונים. צור חדר ראשון למעלה!</p>';
                         return;
                     }
