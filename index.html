@@ -6,7 +6,7 @@
     <title>גשר שפות עברית 🇮🇱 ⇄ 🇫🇷 צרפתית - ניהול מערכת</title>
     <style>
         :root {
-            --primary-color: #1e3a8a; /* כחול עמוק לממשק הצרפתי */
+            --primary-color: #1e3a8a; /* כחול מלכותי עמוק לממשק הצרפתי */
             --secondary-color: #2563eb;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
@@ -61,7 +61,7 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover { background-color: #1e40af; }
+        button:hover { background-color: #1d4ed8; }
         .room-link-box {
             background: #f8fafc;
             border: 1px dashed #cbd5e1;
@@ -298,7 +298,7 @@
             margin-top: 0;
             font-size: 1.25rem;
         }
-        button.send-btn:hover { background-color: #1e40af; }
+        button.send-btn:hover { background-color: #1d4ed8; }
         button.send-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
         
         .closed-notice {
@@ -387,8 +387,8 @@
                 <span id="room-indicator">חדר: כללי</span>
             </div>
             <div class="input-row">
-                <textarea id="message-input" placeholder="הקלד משפט... / Écrivez..." oninput="updateTypingStatus()" onkeydown="checkEnter(event)"></textarea>
-                <button id="send-btn-element" class="send-btn" onclick="sendMessage()" title="שלח / Envoyer">🚀</button>
+                <textarea id="message-input" placeholder="Écrivez un message... / הקלד משפט..." oninput="updateTypingStatus()" onkeydown="checkEnter(event)"></textarea>
+                <button id="send-btn-element" class="send-btn" onclick="sendMessage()" title="Envoyer / שלח">🚀</button>
             </div>
         </div>
         
@@ -434,7 +434,7 @@
             const inputAreaBox = document.getElementById('input-area-box');
             const connectionBadge = document.getElementById('connection-badge');
             const typingStatus = document.getElementById('typing-status');
-            const roomDocRef = doc(db, "rooms", roomId);
+            const roomDocRef = doc(db, "rooms-french", roomId);
 
             onSnapshot(roomDocRef, (docSnap) => {
                 connectionBadge.innerHTML = '🟢 מחובר לענן';
@@ -453,7 +453,7 @@
                 if (data && data.typing && data.typing.user && data.typing.user !== userName) {
                     const isStillActive = (Date.now() - (data.typing.time?.toMillis() || 0)) < 6000;
                     if (isStillActive) {
-                        typingStatus.innerHTML = `✏️ ${escapeHtml(data.typing.user)} מקליד/ה...`;
+                        typingStatus.innerHTML = `✏️ ${escapeHtml(data.typing.user)} est en train d'écrire...`;
                     } else {
                         typingStatus.innerHTML = '';
                     }
@@ -465,7 +465,7 @@
                 connectionBadge.innerHTML = '🔴 בעיית חיבור';
             });
 
-            const messagesRef = collection(db, "rooms", roomId, "messages");
+            const messagesRef = collection(db, "rooms-french", roomId, "messages");
             const q = query(messagesRef, orderBy("timestamp", "asc"));
 
             onSnapshot(q, (snapshot) => {
@@ -501,7 +501,7 @@
                             </div>
                             <button id="btn-${docSnap.id}" class="speak-btn" onclick="speakText('${escapeHtml(textToSpeak).replace(/'/g, "\\'")}', '${speakLang}', 'btn-${docSnap.id}')" title="השמע 🔊">🔊</button>
                         </div>
-                        <span class="meta">${formatTime(data.timestamp)} (לחץ כפול להעתקה)</span>
+                        <span class="meta">${formatTime(data.timestamp)}</span>
                     `;
                     chatWindow.appendChild(msgDiv);
                 });
@@ -657,7 +657,7 @@
                 }
                 
                 try {
-                    const roomDocRef = doc(db, "rooms", roomName);
+                    const roomDocRef = doc(db, "rooms-french", roomName);
                     await setDoc(roomDocRef, { 
                         createdAt: serverTimestamp(),
                         roomName: roomName 
@@ -692,7 +692,7 @@
                 container.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">טוען חדרים מהענן...</p>';
 
                 try {
-                    const roomsSnapshot = await getDocs(collection(db, "rooms"));
+                    const roomsSnapshot = await getDocs(collection(db, "rooms-french"));
                     container.innerHTML = '';
 
                     if (roomsSnapshot.empty) {
@@ -730,7 +730,7 @@
             window.resetRoomMessages = async function(roomDocId) {
                 if (confirm(`האם אתה בטוח שברצונך לאפס את השיחה בחדר "${roomDocId}"? כל ההודעות הקודמות יימחקו, אך הקישור יישאר פעיל.`)) {
                     try {
-                        const messagesRef = collection(db, "rooms", roomDocId, "messages");
+                        const messagesRef = collection(db, "rooms-french", roomDocId, "messages");
                         const snapshot = await getDocs(messagesRef);
                         
                         const batch = writeBatch(db);
@@ -750,7 +750,7 @@
             window.deleteRoom = async function(roomDocId) {
                 if (confirm(`האם אתה בטוח שברצונך למחוק את החדר "${roomDocId}" וכל ההיסטוריה שלו?`)) {
                     try {
-                        await deleteDoc(doc(db, "rooms", roomDocId));
+                        await deleteDoc(doc(db, "rooms-french", roomDocId));
                         alert("החדר נמחק בהצלחה!");
                         loadActiveRooms();
                     } catch (e) {
