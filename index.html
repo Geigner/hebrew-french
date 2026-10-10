@@ -6,8 +6,8 @@
     <title>גשר שפות עברית 🇮🇱 ⇄ 🇫🇷 צרפתית - ניהול מערכת</title>
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
+            --primary-color: #1e3a8a; /* כחול עמוק לממשק הצרפתי */
+            --secondary-color: #2563eb;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-color: #1e293b;
@@ -61,7 +61,7 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover { background-color: #1d4ed8; }
+        button:hover { background-color: #1e40af; }
         .room-link-box {
             background: #f8fafc;
             border: 1px dashed #cbd5e1;
@@ -256,7 +256,7 @@
         textarea:focus {
             outline: none;
             border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
         button.send-btn {
             background-color: var(--primary-color);
@@ -270,7 +270,7 @@
             margin-top: 0;
             font-size: 1.25rem;
         }
-        button.send-btn:hover { background-color: #1d4ed8; }
+        button.send-btn:hover { background-color: #1e40af; }
         button.send-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
         .closed-notice {
             display: flex;
@@ -307,12 +307,12 @@
         </div>
 
         <div id="dashboard" class="card hidden">
-            <h2>🛠️ לוח בקרה - ניהול חדרי שיחה (🇮🇱 ⇄ 🇫🇷)</h2>
+            <h2>🛠️ לוח בקרה - ניהול חדרי שיחה (🇮🇱 ⇄ 🇫🇷 צרפתית)</h2>
             <p>צור חדר שיחה חדש, שתף לוואטסאפ או נהל את החדרים הפעילים:</p>
             
             <div style="margin-top: 20px;">
                 <h3>➕ יצירת חדר חדש</h3>
-                <input type="text" id="room-name-input" placeholder="שם החדר (למשל: קבוצה-א-צרפתית)" onkeydown="if(event.key==='Enter') createRoomLink()">
+                <input type="text" id="room-name-input" placeholder="שם החדר (למשל: קבוצה-צרפתית)" onkeydown="if(event.key==='Enter') createRoomLink()">
                 <button onclick="createRoomLink()">צור קישור לחדר</button>
                 
                 <div id="result-area" class="hidden">
@@ -357,7 +357,7 @@
                 <span id="room-indicator">חדר: כללי</span>
             </div>
             <div class="input-row">
-                <textarea id="message-input" placeholder="הקלד משפט... / Tapez ici..." onkeydown="checkEnter(event)"></textarea>
+                <textarea id="message-input" placeholder="הקלד משפט... / Écrivez..." onkeydown="checkEnter(event)"></textarea>
                 <button id="send-btn-element" class="send-btn" onclick="sendMessage()" title="שלח / Envoyer">🚀</button>
             </div>
         </div>
@@ -393,17 +393,17 @@
             document.getElementById('chat-interface').classList.remove('hidden');
             document.getElementById('room-indicator').innerText = `חדר: ${roomId}`;
 
-            let userName = localStorage.getItem('bridge_chat_username');
+            let userName = localStorage.getItem('bridge_chat_username_fr');
             if (!userName) {
                 userName = prompt("הכנס את שמך להצטרפות לשיחה:") || "משתמש/ת";
                 userName = userName.trim();
-                localStorage.setItem('bridge_chat_username', userName);
+                localStorage.setItem('bridge_chat_username_fr', userName);
             }
 
             const chatWindow = document.getElementById('chat-window');
             const inputAreaBox = document.getElementById('input-area-box');
             const connectionBadge = document.getElementById('connection-badge');
-            const roomDocRef = doc(db, "rooms", roomId);
+            const roomDocRef = doc(db, "rooms", roomId); // שומר על האוסף המקורי של הצרפתית
 
             onSnapshot(roomDocRef, (docSnap) => {
                 connectionBadge.innerHTML = '🟢 מחובר לענן';
@@ -455,17 +455,33 @@
                 }, 100);
             });
 
-            window.speakText = function(text, lang) {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = lang;
-                    utterance.rate = 0.9;
-                    window.speechSynthesis.speak(utterance);
-                } else {
+            // מנגנון הקראה קולית חכם מותאם לצרפתית
+            window.speakText = function(text, langCode) {
+                if (!('speechSynthesis' in window)) {
                     alert("דפדפן זה אינו תומך בהקראה קולית.");
+                    return;
                 }
+
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = langCode;
+                utterance.rate = 0.9;
+
+                const voices = window.speechSynthesis.getVoices();
+                const targetVoice = voices.find(voice => voice.lang.startsWith(langCode.slice(0, 2)));
+                
+                if (targetVoice) {
+                    utterance.voice = targetVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
             };
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
 
             window.sendMessage = async function() {
                 const input = document.getElementById('message-input');
