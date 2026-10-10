@@ -403,7 +403,7 @@
             const chatWindow = document.getElementById('chat-window');
             const inputAreaBox = document.getElementById('input-area-box');
             const connectionBadge = document.getElementById('connection-badge');
-            const roomDocRef = doc(db, "rooms", roomId); // שומר על האוסף המקורי של הצרפתית
+            const roomDocRef = doc(db, "rooms", roomId);
 
             onSnapshot(roomDocRef, (docSnap) => {
                 connectionBadge.innerHTML = '🟢 מחובר לענן';
@@ -432,7 +432,8 @@
                     const isHebrew = data.originalLang === 'he';
                     msgDiv.className = `message ${isHebrew ? 'hebrew' : 'french'}`;
                     
-                    const textToSpeak = isHebrew ? data.translatedText : data.originalText;
+                    // תוקן: תמיד מקריאים את התרגום בשפה הנגדית
+                    const textToSpeak = data.translatedText; 
                     const speakLang = isHebrew ? 'fr-FR' : 'he-IL';
                     const author = data.author || "אורח/ת";
 
@@ -455,7 +456,6 @@
                 }, 100);
             });
 
-            // מנגנון הקראה קולית חכם מותאם לצרפתית
             window.speakText = function(text, langCode) {
                 if (!('speechSynthesis' in window)) {
                     alert("דפדפן זה אינו תומך בהקראה קולית.");
