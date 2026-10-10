@@ -454,7 +454,7 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, deleteDoc, doc, getDocs, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyD-YOUR-FR-API-KEY-HERE", // החלף במפתח ה-Firebase של צרפתית אם נדרש
+            apiKey: "AIzaSyD-YOUR-FR-API-KEY-HERE",
             authDomain: "hebrew-french.firebaseapp.com",
             projectId: "hebrew-french",
             storageBucket: "hebrew-french.firebasestorage.app",
@@ -701,8 +701,7 @@
             };
 
         } else {
-            document.getElementById('admin-container').classList.add('hidden');
-            document.getElementById('admin-container').classList.remove('hidden'); // Fix toggle
+            document.getElementById('chat-interface').classList.add('hidden');
             document.getElementById('admin-container').classList.remove('hidden');
 
             window.checkPassword = function() {
